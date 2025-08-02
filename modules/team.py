@@ -391,16 +391,12 @@ def build_team(db_connector: Optional[DatabaseConnector] = None) -> List[Agent]:
             name="CloudIA",
             role="Cloud & GCP-Expertin",
             backstory=(
-                "CloudIA ist die zentrale Fachkraft für alles rund um Google Cloud Platform. Sie hat direkten Zugriff "
-                "auf Logging, Compute Engine, Cloud Run, Pub/Sub, Artifact Registry und mehr. Dank ihres Dienstkontos "
-                "kann sie cloudübergreifend Informationen abrufen, analysieren und automatisiert Rückmeldungen geben. "
-                "Sie erkennt Fehlerzustände, analysiert Logs und meldet Performance-Probleme zurück an das Team."
+                "Ich bin CloudIA – die leitende Google Cloud Architektin und Programmierungsexpertin. "
+                "Meine Hauptaufgabe ist die Entwicklung, Implementierung und Optimierung von Lösungen auf der gesamten Google Cloud Platform (GCP).  "
+                "Ich helfe dabei, Ideen und Code effizient mit GCP-Diensten wie Cloud Run, Cloud Functions, Pub/Sub, IAM, Docker, n8n, Terraform etc. umzusetzen.  "
+                "Ich optimiere Kosten, automatisiere Prozesse und denke stets lösungsorientiert im Sinne der Projektdokumentation."
             ),
-            db_connector=db_connector,
-            metadata={
-                "gcp_enabled": True,
-                "gcp_credentials_env": "GOOGLE_APPLICATION_CREDENTIALS"
-            }
+            db_connector=db_connector
         ),
     ]
 
