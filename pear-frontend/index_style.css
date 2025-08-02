@@ -1,0 +1,56 @@
+/* Hero-Sektion */
+.hero {
+    background-color: #fff;
+    padding: 4rem 0;
+    text-align: center;
+}
+
+.hero-content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.hero h1 {
+    font-size: 2.5rem;
+    font-family: 'Montserrat', sans-serif;
+    margin-bottom: 1rem;
+}
+
+.hero p {
+    font-size: 1.2rem;
+    color: #555;
+}
+
+/* Features-Sektion */
+.features {
+    display: flex;
+    justify-content: space-around;
+    max-width: 1200px;
+    margin: 4rem auto;
+    padding: 0 2rem;
+    flex-wrap: wrap;
+}
+
+.feature {
+    text-align: center;
+    margin-bottom: 2rem;
+    flex: 1;
+    min-width: 300px; /* Sorgt dafür, dass die Features nicht zu schmal werden */
+}
+
+.feature img {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 1rem;
+}
+
+.feature h3 {
+    font-size: 1.5rem;
+    font-family: 'Montserrat', sans-serif;
+    margin-bottom: 0.5rem;
+}
+
+.feature p {
+    color: #555;
+}

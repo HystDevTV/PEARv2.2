@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PEAR - Professionelle Einsatz-, Abrechnungs- und Ressourcenverwaltung</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- 1. Vollflächiger Header der App -->    
+    <!-- NEUE CSS-STRUKTUR: Zuerst die globale Datei, dann die seitenspezifische -->
+    <link rel="stylesheet" href="global.css">
+    <link rel="stylesheet" href="index.css">
+    
+    <!-- Hier das Favicon einfügen, sobald es verfügbar ist -->
+    <!-- <link rel="icon" href="favicon.ico" type="image/x-icon"> -->
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <nav>
+                <!-- Logo-Struktur mit Bild und Text -->
+                <a href="#" class="logo-link">
+                    <!-- Der Bildpfad wurde hier aktualisiert -->
+                    <img src="images/logo.png" alt="PEAR Logo" class="logo-image">
+                    <div class="logo-text-container">
+                        <span class="logo-name">PEAR</span>
+                        <span class="logo-tagline">Professionelle Einsatz-, Abrechnungs- und Ressourcenverwaltung</span>
+                    </div>
+                </a>
+                
+                <div class="nav-links">
+                    <a href="#features">Features</a>
+                    <a href="#pricing">Preise</a>
+                    <a href="#contact">Kontakt</a>
+                </div>
+                <div>
+                    <!-- Später auf die echten Login/Register Seiten verlinken -->
+                    <a href="#" class="btn btn-secondary">Anmelden</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="section-hero">
+            <div class="container">
+                <div class="hero-content">
+                    <div class="hero-text">
+                        <h1>Ihre Zeit gehört den Menschen, nicht dem Papierkram.</h1>
+                        <p class="hero-subtitle">PEAR ist die intuitive Software-Lösung, die Alltagsbegleitern hilft, Verwaltung zu automatisieren und mehr Zeit für das Wesentliche zu haben.</p>
+                        <a href="#" class="btn btn-primary">Jetzt durchstarten</a>
+                    </div>
+                    <div class="hero-visual"></div>
+                </div>
+            </div>
+            <div class="wave-divider">
+                <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                    <path d="M985.66,92.83C906.67,72,823.78,31,743.84,14.19c-82.26-17.34-168.06-16.33-250.45.39-57.84,11.73-114,31.07-172,41.86A600.21,600.21,0,0,1,0,27.35V120H1200V95.8C1132.19,118.92,1055.71,111.31,985.66,92.83Z" class="shape-fill"></path>
+                </svg>
+            </div>
+        </section>
+
+        <section id="features" class="section features-section">
+            <div class="container">
+                <h2>Warum PEAR die beste Wahl ist</h2>
+                
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🤖</div>
+                        <h3>KI-gestützte Automatisierung</h3>
+                        <p>Automatische Extraktion von Klientendaten aus E-Mails durch fortschrittliche KI-Technologie.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">📱</div>
+                        <h3>Mobile-First Design</h3>
+                        <p>Optimiert für Smartphone und Tablet - perfekt für Alltagsbegleiter unterwegs.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">🛡️</div>
+                        <h3>DSGVO-konform</h3>
+                        <p>Höchste Datenschutz- und Sicherheitsstandards für sensible Klientendaten.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">⏱️</div>
+                        <h3>Zeitersparnis</h3>
+                        <p>Bis zu 60% weniger Verwaltungsaufwand durch intelligente Automatisierung.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">💶</div>
+                        <h3>Kosteneffizient</h3>
+                        <p>Transparente Preisgestaltung ohne versteckte Kosten - Starten mit Ihrem Wachstum.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">❤️‍🩹</div>
+                        <h3>Branchenspezialisiert</h3>
+                        <p>Speziell entwickelt für §45a SGB XI Entlastungsleistungen und Alltagsbetreuung.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="how-it-works" class="section" style="background-color: var(--background-grey); padding-top: 150px;">
+             <div class="container">
+                <h2>Ein Einblick gefällig, wie PEAR Ihnen hilft zu helfen?</h2>
+                <h3 class="timeline-subheading">So einfach legt PEAR Ihre neue Klienten an:</h3>
+                <div class="timeline-container">
+                    <div class="timeline-item">
+                        <div class="timeline-content"><h3>1. E-Mail Eingang</h3><p>Anfragen von Vermittlungsstellen landen wie gewohnt in Ihrem Postfach.</p></div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-content"><h3>2. KI-Extraktion</h3><p>PEAR liest die entsprechenden E-Mails aus und legt automatisch einen neuen Klienten an.</p></div>
+                    </div>
+                     <div class="timeline-item">
+                        <div class="timeline-content"><h3>3. Aktives Nachfragen</h3><p>Sollten die Daten unvollständig sein, erkennt PEAR das und sendet dem Absender eine Email, in der exakt nach den fehlenden Daten gefragt wird.</p></div>
+                    </div>
+                     <div class="timeline-item">
+                        <div class="timeline-content"><h3>4. Abschluss</h3><p>Wenn alle Daten vollständig sind, bestätigt PEAR Ihnen den neuen Eintrag in der Datenbank per Email.</p></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="development-insight" class="section dev-insight-section">
+            <div class="container">
+                <h2>Vom Code zur KI: Ein Blick hinter die Kulissen</h2>
+                <p class="dev-insight-text">Wir glauben an Transparenz und möchten unsere Begeisterung für Technologie mit Ihnen teilen. Für alle, die es interessiert, haben wir den Entwicklungsprozess von PEAR dokumentiert – von den ersten Ideen bis zur Implementierung der künstlichen Intelligenz. Entdecken Sie die Technologien, die PEAR antreiben.</p>
+                <a href="developer-insights.html" class="btn btn-primary">Zur Entwickler-Dokumentation</a>
+            </div>
+        </section>
+        
+         <section id="pricing" class="section pricing-section">
+             <div class="container">
+                <h2>PEAR: Modernste Technologie zu moderaten Preisen</h2>
+                <div class="pricing-grid">
+                    <div class="pricing-card">
+                        <h3>Starter</h3>
+                        <p>Für Einzelkämpfer</p>
+                        <div class="price">80€</div>
+                        <ul><li>Bis zu 10 Klienten</li><li>KI-Datenextraktion</li><li>Terminplanung</li></ul>
+                        <a href="#" class="btn btn-secondary">Paket wählen</a>
+                    </div>
+                    <div class="pricing-card highlight">
+                        <h3>Professional</h3>
+                        <p>Für kleine Teams</p>
+                        <div class="price">249€</div>
+                        <ul><li>Bis zu 50 Klienten</li><li>Alle KI-Features</li><li>Routenoptimierung</li><li>Dokumentenmanagement</li></ul>
+                        <a href="#" class="btn btn-secondary" style="background-color: var(--pear-white); border-color: var(--pear-white);">Beliebtestes Paket</a>
+                    </div>
+                    <div class="pricing-card">
+                        <h3>Enterprise</h3>
+                        <p>Für etablierte Dienste</p>
+                        <div class="price">449€</div>
+                        <ul><li>Unbegrenzte Klienten</li><li>Alle Pro-Features</li><li>Telefonischer Support</li></ul>
+                        <a href="#" class="btn btn-secondary">Paket wählen</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+<footer>
+    <div class="container">
+        <p>&copy; 2025 PEAR. Mit ❤️ entwickelt für Heldinnen und Helden des Alltags.</p>
+        <div class="footer-links mt-4">
+            <a href="impressum.html" class="footer-btn">Impressum</a>
+            <a href="#" class="footer-btn">Datenschutz</a>
+            <a href="#" class="footer-btn">AGB</a>
+        </div>
+    </div>
+</footer>
+
+
+</body>
+</html>

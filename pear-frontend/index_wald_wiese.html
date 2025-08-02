@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webseiten-Entwurf: Wald & Erde</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* DEFINITION DER FARBPALETTE "WALD & ERDE" */
+        :root {
+            --bg-waldgruen: #224229; /* Dunkles, sattes Waldgrün */
+            --text-offwhite: #F3F4F6; /* Sanftes Off-White */
+            --akzent-hellbraun: #D2B48C; /* Warmes, helles Braun für Hover-Effekte */
+            --akzent-blassgruen: #8FBC8F; /* Blyasseres Grün für sekundäre Akzente */
+            --border-color: rgba(210, 180, 140, 0.2); /* Leichter Rand für die Karten */
+        }
+
+        body {
+            background-color: var(--bg-waldgruen);
+            color: var(--text-offwhite);
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Allgemeine Klassen für die Karten-Elemente */
+        .interactive-card {
+            background-color: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: all 0.3s ease-in-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Der leuchtende Rand-Effekt beim Hovern */
+        .interactive-card:hover {
+            border-color: var(--akzent-hellbraun);
+            box-shadow: 0 0 15px rgba(210, 180, 140, 0.4);
+        }
+
+        /* Stil für die Navigationsleiste */
+        nav a {
+            transition: color 0.3s ease;
+        }
+        nav a:hover {
+            color: var(--akzent-hellbraun);
+        }
+        nav a.active {
+            color: var(--akzent-hellbraun);
+            font-weight: 500;
+        }
+
+        /* Stil für das Balkendiagramm */
+        .bar-chart-bar {
+            background-color: var(--akzent-hellbraun);
+            border-radius: 0.25rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        
+        /* Stile für die nummerierten Kreise */
+        .step-circle {
+            border: 2px solid var(--akzent-blassgruen);
+            color: var(--akzent-blassgruen);
+            transition: all 0.3s ease;
+        }
+
+        .step-circle:hover, .step-circle.active {
+            background-color: var(--akzent-hellbraun);
+            border-color: var(--akzent-hellbraun);
+            color: var(--bg-waldgruen);
+            font-weight: 700;
+        }
+        
+        /* Stile für die ausklappbaren Inhalte */
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out, margin-top 0.5s ease-in-out;
+        }
+
+        .accordion-content.open {
+            max-height: 500px; /* Ausreichend Höhe für den Inhalt */
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- HEADER / NAVIGATION -->
+    <header class="p-4 md:p-6">
+        <nav class="container mx-auto flex justify-between items-center">
+            <div class="text-xl font-bold tracking-wider">
+                Dein<span style="color: var(--akzent-hellbraun);">Logo</span>
+            </div>
+            <div class="hidden md:flex items-center space-x-8 text-sm uppercase tracking-widest">
+                <a href="#" class="active">Konzept</a>
+                <a href="#">Hürden</a>
+                <a href="#">Chancen & KI</a>
+                <a href="#">Strategie</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- HAUPTINHALT -->
+    <main class="container mx-auto p-4 md:p-8">
+
+        <!-- TITELBEREICH -->
+        <section class="text-center my-12 md:my-20">
+            <h1 class="text-4xl md:text-6xl font-bold leading-tight">Die ultimative Nische</h1>
+            <p class="text-lg md:text-xl mt-4 max-w-3xl mx-auto" style="color: var(--akzent-blassgruen);">
+                Analyse der Machbarkeit eines Produkts an der Schnittstelle von Ultra-Luxus und sexuellem Wohlbefinden.
+            </p>
+        </section>
+
+        <!-- MARKTKONTEXT -->
+        <section class="my-16">
+            <div class="interactive-card text-center">
+                <h2 class="text-2xl md:text-3xl font-bold mb-2">Marktkontext: Die Konvergenz zweier Giganten</h2>
+                <p class="text-base md:text-lg max-w-2xl mx-auto mb-8">Ihr Produkt zielt nicht auf einen, sondern auf die Überschneidung von zwei massiven globalen Märkten. Das Verständnis dieser Dynamik ist der Schlüssel zum Erfolg.</p>
+                
+                <!-- Balkendiagramm -->
+                <div class="w-full max-w-2xl mx-auto space-y-4 text-left text-sm">
+                    <!-- Balken 1 -->
+                    <div class="flex items-center">
+                        <span class="w-40 pr-4">Globaler Luxusgütermarkt</span>
+                        <div class="flex-1 h-8 bg-gray-700 rounded-md overflow-hidden">
+                            <div class="bar-chart-bar h-full" style="width: 85%;">
+                                <span class="pl-2 opacity-80">369 Mrd. USD</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Balken 2 -->
+                    <div class="flex items-center">
+                        <span class="w-40 pr-4">Globaler Sex-Toy Markt</span>
+                        <div class="flex-1 h-8 bg-gray-700 rounded-md overflow-hidden">
+                             <div class="bar-chart-bar h-full" style="width: 15%; background-color: var(--akzent-blassgruen);">
+                                <span class="pl-2 opacity-80">~50 Mrd.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DIE KRITISCHEN HÜRDEN -->
+        <section class="my-20">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-4">Die kritischen Hürden: Realitäts-Check</h2>
+            <p class="text-lg text-center mb-12" style="color: var(--akzent-blassgruen);">Bevor wir von Chancen träumen, müssen die drei größten Herausforderungen verstanden und gelöst werden.</p>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Hürde 1 -->
+                <div class="interactive-card">
+                    <div class="flex items-center mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--akzent-blassgruen);"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+                        <h3 class="text-xl font-bold ml-3">Extreme Material- & Herstellungskosten</h3>
+                    </div>
+                    <p class="text-sm opacity-80">Die Kosten für Platin und ethisch einwandfreie Diamanten sind immens. Die Fertigung erfordert Goldschmiedekunst auf höchstem Niveau.</p>
+                </div>
+                <!-- Hürde 2 -->
+                <div class="interactive-card">
+                     <div class="flex items-center mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--akzent-blassgruen);"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                        <h3 class="text-xl font-bold ml-3">Kompromisslose Sicherheit & Hygiene</h3>
+                    </div>
+                    <p class="text-sm opacity-80">Das Produkt muss 100% biokompatibel sein. Keine scharfen Kanten, keine porösen Oberflächen. Absolut feste Fassungen.</p>
+                </div>
+                <!-- Hürde 3 -->
+                <div class="interactive-card">
+                     <div class="flex items-center mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--akzent-blassgruen);"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path><path d="M2 8c0-2.2.7-4.3 2-6"></path><path d="M22 8c0-2.2-.7-4.3-2-6"></path></svg>
+                        <h3 class="text-xl font-bold ml-3">Markenaufbau & Vertrauen</h3>
+                    </div>
+                    <p class="text-sm opacity-80">Niemand gibt €100.000+ für ein Intimprodukt einer unbekannten Marke aus. Der Aufbau einer Marke, die für ultimativen Luxus steht, ist die größte Marketing-Herausforderung.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- STRATEGISCHER FAHRPLAN -->
+        <section class="my-20">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-12">Strategischer Fahrplan zum Erfolg</h2>
+            <div id="accordion" class="space-y-4">
+                <!-- Schritt 1 -->
+                <div class="interactive-card cursor-pointer" onclick="toggleAccordion(1)">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xl font-bold">1. "Hero-Produkt" entwickeln</h3>
+                        <div class="step-circle w-8 h-8 rounded-full flex items-center justify-center font-bold">1</div>
+                    </div>
+                    <div id="content-1" class="accordion-content">
+                        <p class="opacity-80 text-sm">Entwicklung eines perfekten, einzigartigen Prototypen. Dieses "Meisterstück" dient als Marketing-Tool für Fotos, Videos und zur Präsentation auf exklusiven Events. Es ist nicht nur ein Produkt, es ist eine Legende.</p>
+                    </div>
+                </div>
+                <!-- Schritt 2 -->
+                <div class="interactive-card cursor-pointer" onclick="toggleAccordion(2)">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xl font-bold">2. Marke & Storytelling aufbauen</h3>
+                        <div class="step-circle w-8 h-8 rounded-full flex items-center justify-center font-bold">2</div>
+                    </div>
+                     <div id="content-2" class="accordion-content">
+                        <p class="opacity-80 text-sm">Die Marke muss Eleganz, Diskretion und Sicherheit ausstrahlen. Der Name (z.B. "Amor Primus"), die visuelle Aura und die gesamte Kommunikation müssen auf dem Niveau von Luxus-Juwelieren sein, nicht von Erotik-Shops.</p>
+                    </div>
+                </div>
+                <!-- Schritt 3 -->
+                <div class="interactive-card cursor-pointer" onclick="toggleAccordion(3)">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xl font-bold">3. Exklusive Vertriebskanäle nutzen</h3>
+                        <div class="step-circle w-8 h-8 rounded-full flex items-center justify-center font-bold">3</div>
+                    </div>
+                     <div id="content-3" class="accordion-content">
+                        <p class="opacity-80 text-sm">Vergessen Sie den Online-Shop. Ihre Partner sind Luxus-Concierge-Services, Kunstgalerien, exklusive Matchmaker und Event-Planer für die "Superreichen". Der Vertrieb erfolgt durch persönliche Beziehungen.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <script>
+        let openAccordion = null;
+
+        function toggleAccordion(index) {
+            const content = document.getElementById(`content-${index}`);
+            const circle = content.parentElement.querySelector('.step-circle');
+
+            if (openAccordion === index) {
+                // Schließe das aktuell offene Akkordeon
+                content.classList.remove('open');
+                circle.classList.remove('active');
+                openAccordion = null;
+            } else {
+                // Schließe das vorherige Akkordeon, falls eines offen ist
+                if (openAccordion !== null) {
+                    document.getElementById(`content-${openAccordion}`).classList.remove('open');
+                    document.querySelector(`#content-${openAccordion}`).parentElement.querySelector('.step-circle').classList.remove('active');
+                }
+                
+                // Öffne das neue Akkordeon
+                content.classList.add('open');
+                circle.classList.add('active');
+                openAccordion = index;
+            }
+        }
+        
+        // Optional: Das erste Akkordeon standardmäßig öffnen
+        // window.onload = () => {
+        //     toggleAccordion(1);
+        // };
+    </script>
+
+</body>
+</html>

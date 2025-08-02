@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PEAR - Developer Insights</title>
+    
+    <!-- NEUE CSS-STRUKTUR -->
+    <link rel="stylesheet" href="global.css">
+    <link rel="stylesheet" href="developer-insights.css">
+
+</head>
+<body>
+
+    <!-- Globaler Header -->
+    <header class="site-header">
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo-link">
+                    <img src="images/logo.png" alt="PEAR Logo" class="logo-image">
+                    <div class="logo-text-container">
+                        <span class="logo-name">PEAR</span>
+                        <span class="logo-tagline">Professionelle Einsatz-, Abrechnungs- und Ressourcenverwaltung</span>
+                    </div>
+                </a>
+                
+                <div class="nav-links">
+                    <a href="index.html#features">Features</a>
+                    <a href="index.html#pricing">Preise</a>
+                    <a href="index.html#contact">Kontakt</a>
+                </div>
+                <div>
+                    <a href="register.html" class="btn btn-secondary">Anmelden</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Seitenspezifischer Titelbereich -->
+    <div class="title-header header-gradient">
+        <div class="container">
+            <h1>Ein Blick hinter die Kulissen</h1>
+            <p class="subtitle">Die Entstehungsgeschichte von PEAR: Von der Idee bis zur Implementierung.</p>
+        </div>
+    </div>
+
+    <div class="container main-content">
+        <!-- Timeline Start -->
+        <div class="timeline">
+
+            <!-- Meilenstein 1: Infrastruktur -->
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content card">
+                    <h2 class="milestone-title">Meilenstein 1: Das Fundament</h2>
+                    <p class="milestone-date">Juli 2025</p>
+                    <h3 class="step-title">Ziel: Eine stabile Hosting-Umgebung</h3>
+                    <p>Die erste Aufgabe war die Bereitstellung einer kosteneffizienten und stabilen Infrastruktur auf der Google Cloud Platform. Die Wahl fiel auf eine e2-medium Compute Engine VM mit Ubuntu 22.04 LTS.</p>
+                    <div class="decision-box">
+                        <strong>Entscheidung:</strong> Google Compute Engine (e2-medium, 2 vCPUs, 4 GB RAM) in `us-central1`.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Meilenstein 2: Datenbank -->
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content card">
+                    <h2 class="milestone-title">Meilenstein 2: Die Datenzentrale</h2>
+                     <p class="milestone-date">Juli 2025</p>
+                    <h3 class="step-title">Problem: Hartnäckige Datenbank-Probleme</h3>
+                    <p>Die ursprüngliche Wahl, PostgreSQL, führte zu wiederholten Installationsproblemen auf der VM. Um das Projekt nicht zu verzögern, wurde eine pragmatische Entscheidung getroffen.</p>
+                    <div class="problem-box">
+                       ❌ Installationsprobleme mit PostgreSQL.
+                    </div>
+                    <div class="solution-box">
+                        ✅ **Lösung:** Wechsel zu MySQL. Erfolgreiche Installation und Konfiguration der Datenbank `pear_app_db`.
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Meilenstein 3: Backend API -->
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content card">
+                    <h2 class="milestone-title">Meilenstein 3: Das Gehirn der Anwendung</h2>
+                     <p class="milestone-date">Juli 2025</p>
+                    <h3 class="step-title">Ziel: Die erste API</h3>
+                    <p>Mit Python und dem FastAPI-Framework wurde der erste API-Endpunkt `/api/register` für die Benutzerregistrierung entwickelt. Hierbei wurden wichtige Sicherheitsaspekte wie Passwort-Hashing mit bcrypt implementiert.</p>
+                    <div class="decision-box">
+                        <strong>Technologie-Stack:</strong> Python, FastAPI, Passlib, MySQL-Connector.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Meilenstein 4: Serverless Architektur -->
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content card">
+                    <h2 class="milestone-title">Meilenstein 4: Der Pivot</h2>
+                     <p class="milestone-date">18. Juli 2025</p>
+                    <h3 class="step-title">Problem: Die N8N-Sackgasse</h3>
+                    <p>Die geplante E-Mail-Automatisierung mit N8N auf der VM scheiterte an Ressourcenmangel und Instabilität. Ein neuer, robusterer Ansatz war nötig.</p>
+                    <div class="problem-box">
+                       ❌ N8N-Dienst instabil, Build-Prozess fehleranfällig.
+                    </div>
+                    <div class="solution-box">
+                        ✅ **Lösung:** Strategiewechsel zu einer serverlosen Architektur. E-Mails werden via Google Cloud Storage an einen Google Cloud Run-Dienst getriggert.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Meilenstein 5: Der Push-Fehler -->
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content card">
+                    <h2 class="milestone-title">Meilenstein 5: Der hartnäckige Push-Fehler</h2>
+                    <p class="milestone-date">18. Juli 2025</p>
+                    <h3 class="step-title">Problem: Docker-Image lässt sich nicht hochladen</h3>
+                    <p>Nach dem erfolgreichen Bau des Docker-Images für die E-Mail-Verarbeitung sollte dieses in die Google Artifact Registry hochgeladen werden. Ein scheinbar einfacher Schritt, der sich als die größte Hürde des Tages erwies.</p>
+                    <div class="problem-box">
+                       ❌ `Unauthenticated request. Permission denied` trotz korrekter Rollen.
+                    </div>
+                    <div class="solution-box">
+                        ✅ **Lösung:** Umstieg auf Google Cloud Build, das native Berechtigungen besitzt und lokale Authentifizierungsprobleme umgeht. Der Build wird nun durch einen Push zu GitHub ausgelöst.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Meilenstein 6: Go-Live -->
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content card">
+                    <h2 class="milestone-title">Meilenstein 6: Das Gesicht des Projekts</h2>
+                    <p class="milestone-date">19. Juli 2025</p>
+                    <h3 class="step-title">Ziel: Definition der Corporate Identity und Go-Live der Webseite</h3>
+                    <p>Nach intensiver, agiler Zusammenarbeit wurde das finale Design für die Corporate Identity von PEAR festgelegt. Parallel wurde die erste Version der Projektwebseite entwickelt, um die Vision und die Funktionen von PEAR der Welt zu präsentieren.</p>
+                    <div class="decision-box">
+                        <strong>Entscheidung:</strong> Kauf der Domain <strong>www.pear-app.de</strong> und Beauftragung des Webhosters <strong>rainbow-web</strong> für den Live-Betrieb.
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <!-- Timeline Ende -->
+    </div>
+
+    <footer>
+    <div class="container">
+        <p>&copy; 2025 PEAR. Mit ❤️ entwickelt für Heldinnen und Helden des Alltags.</p>
+        <div class="footer-links mt-4">
+            <a href="impressum.html" class="footer-btn">Impressum</a>
+            <a href="#" class="footer-btn">Datenschutz</a>
+            <a href="#" class="footer-btn">AGB</a>
+        </div>
+    </div>
+</footer>
+
+
+</body>
+</html>

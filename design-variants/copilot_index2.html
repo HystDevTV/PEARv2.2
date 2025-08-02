@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PEAR - Professionelle Einsatz-, Abrechnungs- und Ressourcenverwaltung</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg-techgruen: #1c3329;
+            --text-weiss: #1c3329; /* jetzt dunkel */
+            --akzent-braun: #B99470;
+            --akzent-frischgruen: #66CDAA;
+            --border-color-default: #8fc25d; /* hellstes Logo-Grün */;
+            --pear-white: #f8fafc;
+            --pear-green: #1c3329;
+            --pear-mint: #66CDAA;
+            --pear-brown: #B99470;
+        }
+
+        .text-akzentgruen {
+            color: #8fc25d !important;
+            text-shadow:
+                0 1px 4px rgba(0,0,0,0.07),
+                0 0 1px #1c3329,
+                0 0 2px #1c3329;
+        }
+
+        body {
+            background-color: #f3f4f6;
+            color: var(--text-weiss);
+            font-family: 'Montserrat', sans-serif;
+            padding-top: 90px;
+        }
+
+        /* Transluzenter, fixierter Header mit Blur */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 50;
+            background: rgba(12, 97, 58, 0.85); /* halbtransparentes Grün */
+            backdrop-filter: blur(8px);
+            box-shadow: 0 1px 8px #1c3329;
+            transition: background 0.3s, backdrop-filter 0.3s;
+            color: #fff; /* Schrift im Header weiß */
+        }
+
+        /* Allgemeine Klassen für die Karten-Elemente */
+        .interactive-card {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--text-weiss);
+            border: 0.5px solid #198146;
+            border-radius: 0.25rem;
+            padding: 1.5rem;
+            transition: border-color 0.3s ease, border-width 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+        }
+        .interactive-card:hover {
+            background: var(--pear-green);
+            color: var(--text-weiss);
+            border-color: #f3f4f6;
+            box-shadow: 0 0 15px #f3f4f6;
+        }
+        .interactive-card h3 {
+            transition: color 0.3s ease;
+        }
+        .interactive-card:hover h3 {
+            color: rgba(185, 148, 112, 0.3);
+        }
+        .interactive-card .card-icon {
+            color: rgba(185, 148, 112, 0.3);
+            transition: transform 0.3s ease;
+        }
+        .interactive-card:hover .card-icon {
+            transform: scale(1.1);
+        }
+
+        /* Stil für die Navigationsleiste */
+        nav a {
+            transition: color 0.3s ease;
+            color: var(--text-weiss);
+        }
+        nav a:hover {
+            color: rgba(185, 148, 112, 0.3);
+        }
+        nav a.active {
+            color: rgba(185, 148, 112, 0.3);
+            font-weight: 500;
+        }
+
+        /* Stil für das Balkendiagramm */
+        .bar-chart-bar {
+            background-color: var(--akzent-braun);
+            border-radius: 0.25rem;
+            text-align: right;
+            padding-right: 0.5rem;
+            color: var(--bg-techgruen);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        /* Stile für die nummerierten Kreise */
+        .step-circle {
+            border: 2px solid var(--akzent-frischgruen);
+            color: rgba(185, 148, 112, 0.3);
+            transition: all 0.3s ease;
+        }
+        .step-circle:hover, .step-circle.active {
+            background-color: var(--akzent-braun);
+            border-color: var(--akzent-braun);
+            color: var(--bg-techgruen);
+            font-weight: 700;
+        }
+
+        /* Stile für die ausklappbaren Inhalte */
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out, margin-top 0.5s ease-in-out;
+        }
+        .accordion-content.open {
+            max-height: 500px;
+            margin-top: 1rem;
+        }
+
+        /* Timeline: alle Schrift jetzt dunkel */
+        .timeline-process-container,
+        .timeline-process-container * {
+            color: #1c3329 !important;
+        }
+        .timeline-arrow {
+            color: var(--akzent-braun) !important;
+        }
+        .timeline-process-container {
+            background-color: rgba(255, 255, 255, 0.07); /* etwas mehr Sichtbarkeit */
+            border-radius: 0.25rem;
+            border: 0.5px solid #198146;
+            padding: 3rem 2rem;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 2.5rem;
+            margin: 0 auto;
+            max-width: 1200px;
+            flex-wrap: wrap;
+            box-shadow: 0 4px 24px rgba(28,51,41,0.08);
+            transition: background 0.2s, color 0.2s, box-shadow 0.3s;
+        }
+        .timeline-process-container:hover {
+            background: var(--pear-green);
+            border-color: #f3f4f6;
+            box-shadow: 0 0 15px #f3f4f6;
+        }
+        .timeline-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            min-width: 0;
+            flex: 1 1 0;
+        }
+        .timeline-step-title {
+            font-weight: 600;
+            color: inherit;
+            font-size: 1.1rem;
+        }
+        .timeline-step-sub {
+            color: inherit;
+            font-size: 0.95rem;
+            margin-top: 0.2rem;
+        }
+        @media (max-width: 900px) {
+            .timeline-process-container {
+                flex-direction: column;
+                gap: 2rem;
+                padding: 1.5rem 0.5rem;
+                flex-wrap: wrap;
+            }
+            .timeline-arrow {
+                transform: rotate(90deg);
+                margin: 0.5rem 0;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header -->
+    <header class="py-6">
+        <div class="container mx-auto flex justify-between items-center px-4">
+            <a href="#" class="flex items-center space-x-3">
+                <img src="images/logo.png" alt="PEAR Logo" class="h-10">
+                <div>
+                    <span class="text-2xl font-bold text-akzentgruen">PEAR</span><br>
+                    <span class="text-xs opacity-70">Professionelle Einsatz-, Abrechnungs- und Ressourcenverwaltung</span>
+                </div>
+            </a>
+            <nav class="space-x-6">
+                <a href="#features">Features</a>
+                <a href="#timeline">Ablauf</a>
+                <a href="#pricing">Preise</a>
+                <a href="#contact">Kontakt</a>
+                <a href="#" class="ml-4 px-4 py-2 rounded btn">Anmelden</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+
+        <!-- Hero Section -->
+        <section class="my-16 text-center">
+            <h1 class="text-6xl md:text-7xl font-extrabold mb-4 text-akzentgruen drop-shadow">Ihre Zeit gehört den Menschen, nicht dem Papierkram.</h1>
+            <p class="text-lg md:text-xl opacity-80 mb-8">PEAR ist die intuitive Software-Lösung, die Alltagsbegleitern hilft, Verwaltung zu automatisieren und mehr Zeit für das Wesentliche zu haben.</p>
+            <a href="#" class="inline-block px-8 py-3 rounded btn text-lg" style="background:rgba(185,148,112,0.3);color:var(--pear-green);font-weight:700;">Jetzt durchstarten</a>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="my-20">
+            <h2 class="text-3xl font-bold mb-8 text-center text-akzentgruen">Warum PEAR die beste Wahl ist</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="interactive-card">
+                    <div class="text-3xl mb-2">🤖</div>
+                    <h3 class="font-bold text-xl mb-2 text-akzentgruen">KI-gestützte Automatisierung</h3>
+                    <p>Automatische Extraktion von Klientendaten aus E-Mails durch fortschrittliche KI-Technologie.</p>
+                </div>
+                <div class="interactive-card">
+                    <div class="text-3xl mb-2">📱</div>
+                    <h3 class="font-bold text-xl mb-2 text-akzentgruen">Mobile-First Design</h3>
+                    <p>Optimiert für Smartphone und Tablet – perfekt für Alltagsbegleiter unterwegs.</p>
+                </div>
+                <div class="interactive-card">
+                    <div class="text-3xl mb-2">🛡️</div>
+                    <h3 class="font-bold text-xl mb-2 text-akzentgruen">DSGVO-konform</h3>
+                    <p>Höchste Datenschutz- und Sicherheitsstandards für sensible Klientendaten.</p>
+                </div>
+                <div class="interactive-card">
+                    <div class="text-3xl mb-2">⏱️</div>
+                    <h3 class="font-bold text-xl mb-2 text-akzentgruen">Zeitersparnis</h3>
+                    <p>Bis zu 60% weniger Verwaltungsaufwand durch intelligente Automatisierung.</p>
+                </div>
+                <div class="interactive-card">
+                    <div class="text-3xl mb-2">💶</div>
+                    <h3 class="font-bold text-xl mb-2 text-akzentgruen">Kosteneffizient</h3>
+                    <p>Transparente Preisgestaltung ohne versteckte Kosten – Starten mit Ihrem Wachstum.</p>
+                </div>
+                <div class="interactive-card">
+                    <div class="text-3xl mb-2">❤️‍🩹</div>
+                    <h3 class="font-bold text-xl mb-2 text-akzentgruen">Branchenspezialisiert</h3>
+                    <p>Speziell entwickelt für §45a SGB XI Entlastungsleistungen und Alltagsbetreuung.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Timeline Section -->
+        <section id="timeline" class="my-20">
+            <h2 class="text-3xl font-bold mb-8 text-center text-akzentgruen">So einfach legt PEAR Ihre neue Klienten an</h2>
+            <div class="timeline-process-container">
+                <div class="timeline-step">
+                    <div class="timeline-circle">1</div>
+                    <div>
+                        <div class="timeline-step-title">E-Mail Eingang</div>
+                        <div class="timeline-step-sub">Anfragen von Vermittlungsstellen landen wie gewohnt in Ihrem Postfach.</div>
+                    </div>
+                </div>
+                <div class="timeline-arrow">→</div>
+                <div class="timeline-step">
+                    <div class="timeline-circle">2</div>
+                    <div>
+                        <div class="timeline-step-title">KI-Extraktion</div>
+                        <div class="timeline-step-sub">PEAR liest die E-Mails aus und legt automatisch einen neuen Klienten an.</div>
+                    </div>
+                </div>
+                <div class="timeline-arrow">→</div>
+                <div class="timeline-step">
+                    <div class="timeline-circle">3</div>
+                    <div>
+                        <div class="timeline-step-title">Aktives Nachfragen</div>
+                        <div class="timeline-step-sub">Fehlende Daten werden automatisch nachgefragt.</div>
+                    </div>
+                </div>
+                <div class="timeline-arrow">→</div>
+                <div class="timeline-step">
+                    <div class="timeline-circle">4</div>
+                    <div>
+                        <div class="timeline-step-title">Abschluss</div>
+                        <div class="timeline-step-sub">Bestätigung des neuen Eintrags per E-Mail.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pricing Section -->
+        <section id="pricing" class="my-20">
+            <h2 class="text-3xl font-bold mb-8 text-center text-akzentgruen">PEAR: Modernste Technologie zu moderaten Preisen</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="interactive-card">
+                    <h3 class="font-bold text-xl mb-2 text-akzentgruen">Starter</h3>
+                    <p>Für Einzelkämpfer</p>
+                    <div class="text-3xl font-bold my-2 text-akzentgruen">80€</div>
+                    <ul class="mb-4">
+                        <li>Bis zu 10 Klienten</li>
+                        <li>KI-Datenextraktion</li>
+                        <li>Terminplanung</li>
+                    </ul>
+                    <a href="#" class="btn px-4 py-2 rounded" style="background:rgba(185,148,112,0.3);color:var(--pear-green);font-weight:600;">Paket wählen</a>
+                </div>
+                <div class="interactive-card highlight">
+                    <h3 class="font-bold text-xl mb-2 text-akzentgruen">Professional</h3>
+                    <p>Für kleine Teams</p>
+                    <div class="text-3xl font-bold my-2 text-akzentgruen">249€</div>
+                    <ul class="mb-4">
+                        <li>Bis zu 50 Klienten</li>
+                        <li>Alle KI-Features</li>
+                        <li>Routenoptimierung</li>
+                        <li>Dokumentenmanagement</li>
+                    </ul>
+                    <a href="#" class="btn px-4 py-2 rounded" style="background:rgba(185,148,112,0.3);color:var(--pear-green);font-weight:600;">Beliebtestes Paket</a>
+                </div>
+                <div class="interactive-card">
+                    <h3 class="font-bold text-xl mb-2 text-akzentgruen">Enterprise</h3>
+                    <p>Für etablierte Dienste</p>
+                    <div class="text-3xl font-bold my-2 text-akzentgruen">449€</div>
+                    <ul class="mb-4">
+                        <li>Unbegrenzte Klienten</li>
+                        <li>Alle Pro-Features</li>
+                        <li>Telefonischer Support</li>
+                    </ul>
+                    <a href="#" class="btn px-4 py-2 rounded" style="background:rgba(185,148,112,0.3);color:var(--pear-green);font-weight:600;">Paket wählen</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="mt-20 py-8 text-center">
+            <div class="container mx-auto">
+                <p>&copy; 2025 PEAR. Mit ❤️ entwickelt für Heldinnen und Helden des Alltags.</p>
+                <div class="mt-4 space-x-4">
+                    <a href="impressum.html" class="hover:text-akzentgruen">Impressum</a>
+                    <a href="#" class="hover:text-akzentgruen">Datenschutz</a>
+                    <a href="#" class="hover:text-akzentgruen">AGB</a>
+                </div>
+            </div>
+        </footer>
+    </main>

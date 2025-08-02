@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klientenakte - Max Mustermann - PEAR</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Verweis auf die globalen und die App-Stile -->
+    <link rel="stylesheet" href="global.css">
+    <link rel="stylesheet" href="app.css">
+</head>
+<body class="app-body">
+
+    <!-- 1. Vollflächiger Header der App -->
+    <header class="app-header">
+        <div class="app-header-content">
+            <a href="index.html" class="logo-link">
+                <!-- Pfad zum Logo anpassen, falls nötig -->
+                <img src="images/logo.png" alt="PEAR Logo" class="logo-image">
+                <span class="logo-name">PEAR</span>
+            </a>
+            <h1 class="page-title">Klientenakte</h1>
+            <div class="header-placeholder"></div> <!-- Platzhalter für symmetrisches Layout -->
+        </div>
+    </header>
+
+    <!-- 2. Zweigeteilter Hauptbereich der App -->
+    <div class="app-layout">
+        <!-- Linke Spalte: Sidebar-Navigation -->
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <a href="#">Dashboard</a>
+                <a href="client_overview.html" class="active">Klienten</a>
+                <a href="#">Termine</a>
+                <a href="invoice_overview.html">Rechnungen</a>
+                <a href="#">Dokumentation</a>
+                <a href="#">Profil</a>
+                <a href="#">Logout</a>
+            </nav>
+        </aside>
+
+        <!-- Rechte Spalte: Hauptinhalt -->
+        <main class="main-content">
+            <!-- Profil Header mit Klientennamen und Aktionsbuttons -->
+            <div class="profile-header">
+                <div>
+                    <h2 class="profile-name">Max Mustermann</h2>
+                    <!-- Status-Badge in Pillenform unter dem Namen -->
+                    <!-- Verwenden Sie die entsprechende Klasse basierend auf dem Status des Klienten -->
+                    <span class="status-badge status-active profile-name-status">Aktiv</span> 
+                    <!-- Beispiel für andere Status: 
+                    <span class="status-badge status-inactive profile-name-status">Inaktiv</span>
+                    <span class="status-badge status-paused profile-name-status">Ausgesetzt</span>
+                    -->
+                </div>
+                <div class="profile-actions">
+                    <!-- Buttons mit den gewünschten Stilen -->
+                    <button class="btn btn-secondary btn-small">Status ändern</button>
+                    <button class="btn btn-secondary btn-small">Bearbeiten</button>
+                    <button class="btn btn-primary btn-small">Neuen Termin anlegen</button>
+                </div>
+            </div>
+
+            <!-- Modernes Tab-Design -->
+            <div class="tabs">
+                <button class="tab-item active">Stammdaten</button>
+                <button class="tab-item">Termin-Historie</button>
+                <button class="tab-item">Dokumente</button>
+            </div>
+
+            <div class="tab-content">
+                <!-- Tab Pane: Stammdaten -->
+                <div id="stammdaten" class="tab-pane active">
+                    <div class="details-grid">
+                        <div class="details-card">
+                            <h3>Allgemeine Daten</h3>
+                            <dl class="definition-list">
+                                <dt>Klientennummer</dt>
+                                <dd>KMF-XX-2025</dd>
+                                <dt>Adresse</dt>
+                                <dd>Musterstr. 1, 12345 Musterstadt</dd>
+                                <dt>Telefon</dt>
+                                <dd>0178 1234567</dd>
+                                <dt>E-Mail</dt>
+                                <dd>max.mustermann@example.com</dd>
+                                <dt>Betreuungsbeginn</dt>
+                                <dd>2025-07-20</dd>
+                            </dl>
+                        </div>
+                        <div class="details-card">
+                            <h3>Besondere Hinweise</h3>
+                            <p>Benötigt Hilfe beim Einkauf und Spaziergängen, leicht vergesslich. Mag keine laute Musik.</p>
+                            <dl class="definition-list">
+                                <dt>Geplante Std./Woche</dt>
+                                <dd>5</dd>
+                                <dt>Vermittelndes Unternehmen</dt>
+                                <dd>Mustervermittlung GmbH</dd>
+                                <dt>Steuernummer</dt>
+                                <dd>102/345/67890</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Pane: Termin-Historie (Beispielinhalt) -->
+                <div id="termin-historie" class="tab-pane">
+                    <div class="history-list-header">
+                        <span>Datum</span>
+                        <span>Uhrzeit</span>
+                        <span>Beschreibung</span>
+                        <span>Dauer (Std.)</span>
+                    </div>
+                    <div class="history-list-item">
+                        <span>20.07.2025</span>
+                        <span>10:00 - 12:00</span>
+                        <span>Einkauf und Spaziergang</span>
+                        <span>2</span>
+                    </div>
+                    <div class="history-list-item">
+                        <span>18.07.2025</span>
+                        <span>14:00 - 15:00</span>
+                        <span>Arztbesuch Begleitung</span>
+                        <span>1</span>
+                    </div>
+                </div>
+
+                <!-- Tab Pane: Dokumente (Beispielinhalt) -->
+                <div id="dokumente" class="tab-pane">
+                    <div class="details-card">
+                        <h3>Verfügbare Dokumente</h3>
+                        <ul>
+                            <li><a href="#">Pflegeplan_Max_Mustermann_2025.pdf</a></li>
+                            <li><a href="#">Medikamentenplan_Juli_2025.pdf</a></li>
+                            <li><a href="#">Einwilligung_Datenverarbeitung.pdf</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 3. Vollflächiger Footer der App -->
+    <footer class="app-footer">
+        <div class="container">
+            <p>&copy; 2025 PEAR. Mit ❤️ entwickelt für Heldinnen und Helden des Alltags.</p>
+            <div class="footer-links">
+                <a href="impressum.html" class="footer-btn">Impressum</a>
+                <a href="#" class="footer-btn">Datenschutz</a>
+                <a href="#" class="footer-btn">AGB</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // JavaScript für Tab-Funktionalität
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabs = document.querySelectorAll('.tab-item');
+            const tabPanes = document.querySelectorAll('.tab-pane');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Remove active class from all tabs and panes
+                    tabs.forEach(item => item.classList.remove('active'));
+                    tabPanes.forEach(pane => pane.classList.remove('active'));
+
+                    // Add active class to clicked tab
+                    tab.classList.add('active');
+
+                    // Show corresponding tab pane
+                    const targetId = tab.textContent.toLowerCase().replace(/ /g, '-').replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue');
+                    document.getElementById(targetId).classList.add('active');
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>

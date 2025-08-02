@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PEAR - Intelligente Software für Alltagsbetreuung</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Poppins:wght@400;600&display=swap');
+
+        :root {
+            --pear-blue: #008080;
+            --pear-light-green: #98FB98;
+            --pear-dark-green: #006400;
+            --pear-white: #FFFFFF;
+            --background-grey: #F8F9FA;
+            --text-dark: #212529;
+            --font-heading: 'Montserrat', sans-serif;
+            --font-body: 'Poppins', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--background-grey);
+            color: var(--text-dark);
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1140px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background-color: var(--pear-white);
+            padding: 15px 0;
+            border-bottom: 1px solid #e9ecef;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: var(--font-heading);
+            color: var(--pear-dark-green);
+            font-size: 24px;
+            text-decoration: none;
+        }
+
+        .nav-links a {
+            color: var(--text-dark);
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 600;
+        }
+        
+        .nav-links a:hover {
+            color: var(--pear-blue);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background-color: var(--pear-blue);
+            color: var(--pear-white);
+        }
+        
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--pear-blue);
+            border: 2px solid var(--pear-blue);
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--pear-blue);
+            color: var(--pear-white);
+        }
+
+        .section {
+            padding: 80px 0;
+            text-align: center;
+        }
+        
+        .section-hero {
+            padding-top: 100px;
+            padding-bottom: 100px;
+        }
+
+        h1, h2, h3 {
+            font-family: var(--font-heading);
+            color: var(--pear-dark-green);
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto 30px auto;
+        }
+        
+        .hero-buttons .btn {
+            margin: 0 10px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            text-align: left;
+        }
+
+        .feature-card {
+            background-color: var(--pear-white);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .feature-card h3 {
+            margin-top: 0;
+            color: var(--pear-blue);
+        }
+        
+        .how-it-works-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .step-card {
+            text-align: center;
+        }
+
+        .step-card .step-number {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            line-height: 50px;
+            border-radius: 50%;
+            background-color: var(--pear-dark-green);
+            color: var(--pear-white);
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+        
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            align-items: center;
+        }
+        
+        .pricing-card {
+            background-color: var(--pear-white);
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            text-align: left;
+            border: 2px solid transparent;
+        }
+        
+        .pricing-card.highlight {
+            border-color: var(--pear-blue);
+            transform: scale(1.05);
+        }
+        
+        .pricing-card h3 {
+            font-family: var(--font-body);
+            font-weight: 600;
+            font-size: 1.5rem;
+            color: var(--pear-dark-green);
+        }
+        
+        .price {
+            font-family: var(--font-heading);
+            font-size: 3rem;
+            color: var(--pear-blue);
+        }
+        
+        .pricing-card ul {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+
+        .pricing-card ul li {
+            margin-bottom: 10px;
+            padding-left: 25px;
+            position: relative;
+        }
+        
+        .pricing-card ul li::before {
+            content: '✓';
+            color: var(--pear-dark-green);
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 0;
+            background-color: var(--pear-white);
+            margin-top: 80px;
+        }
+        
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            h2 { font-size: 2rem; }
+            nav { flex-direction: column; gap: 15px;}
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <nav>
+                <a href="#" class="logo">PEAR</a>
+                <div class="nav-links">
+                    <a href="#">Startseite</a>
+                    <a href="#">Features</a>
+                    <a href="#">Preise</a>
+                    <a href="#">Kontakt</a>
+                </div>
+                <div>
+                    <a href="/login.html" class="btn btn-secondary">Anmelden</a>
+                    <a href="/register.html" class="btn btn-primary">Registrieren</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="section-hero">
+            <div class="container">
+                <h1>Intelligente Software für Alltagsbetreuung</h1>
+                <p class="hero-subtitle">PEAR revolutioniert die Verwaltung von Alltagsbegleitern durch KI-gestützte Automatisierung, intuitive Bedienung und DSGVO-konforme Datenhaltung.</p>
+                <div class="hero-buttons">
+                    <a href="#" class="btn btn-primary">Kostenlos starten</a>
+                    <a href="#" class="btn btn-secondary">Demo ansehen</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <h2>Warum PEAR die beste Wahl ist</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3>KI-gestützte Automatisierung</h3>
+                        <p>Automatische Extraktion von Klientendaten aus E-Mails durch fortschrittliche KI-Technologie.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>Mobile-First Design</h3>
+                        <p>Optimiert für Smartphone und Tablet - perfekt für Alltagsbegleiter unterwegs.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>DSGVO-konform</h3>
+                        <p>Höchste Datenschutz- und Sicherheitsstandards für sensible Klientendaten[cite: 107, 258].</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>Zeitersparnis</h3>
+                        <p>Bis zu 60% weniger Verwaltungsaufwand durch intelligente Automatisierung.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>Kosteneffizient</h3>
+                        <p>Transparente Preisgestaltung ohne versteckte Kosten - Starten mit Ihrem Wachstum.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>Branchenspezialisiert</h3>
+                        <p>Speziell entwickelt für §45a SGB XI Entlastungsleistungen und Alltagsbetreuung.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" style="background-color: var(--pear-white);">
+             <div class="container">
+                <h2>So einfach funktioniert PEAR</h2>
+                <div class="how-it-works-grid">
+                    <div class="step-card">
+                        <div class="step-number">1</div>
+                        <h3>1. E-Mail Eingang</h3>
+                        <p>Vermittlungsstellen senden Klientenanfragen einfach an Ihre Gmail-Adresse.</p>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-number">2</div>
+                        <h3>2. KI-Extraktion</h3>
+                        <p>PEAR extrahiert automatisch alle relevanten Daten und strukturiert sie.</p>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-number">3</div>
+                        <h3>3. Datenbank-Import</h3>
+                        <p>Alle Informationen werden sicher in der DSGVO-konformen Datenbank gespeichert.</p>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-number">4</div>
+                        <h3>4. Verwaltung</h3>
+                        <p>Einsatzplanung, Dokumentation und Abrechnung - alles in einer Plattform.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="section">
+             <div class="container">
+                <h2>Transparente Preisgestaltung</h2>
+                 <p>Wählen Sie das Paket, das zu Ihrem Betreuungsdienst passt</p>
+                <div class="pricing-grid">
+                    <div class="pricing-card">
+                        <h3>Starter</h3>
+                        <div class="price">80€</div>
+                        <p>pro Monat</p>
+                        <ul>
+                            <li>Bis zu 10 Mitarbeiter</li>
+                            <li>KI-gestützte Datenextraktion</li>
+                        </ul>
+                        <a href="#" class="btn btn-secondary" style="width: 100%; text-align:center;">Paket wählen</a>
+                    </div>
+                    <div class="pricing-card highlight">
+                        <h3>Professional</h3>
+                        <div class="price">249€</div>
+                        <p>pro Monat</p>
+                        <ul>
+                            <li>Bis zu 25 Mitarbeiter</li>
+                            <li>Alle KI-Features</li>
+                        </ul>
+                        <a href="#" class="btn btn-primary" style="width: 100%; text-align:center;">Beliebtestes Paket</a>
+                    </div>
+                    <div class="pricing-card">
+                        <h3>Enterprise</h3>
+                        <div class="price">449€</div>
+                        <p>pro Monat</p>
+                        <ul>
+                            <li>Bis zu 50 Mitarbeiter</li>
+                            <li>Alle KI-Features</li>
+                        </ul>
+                         <a href="#" class="btn btn-secondary" style="width: 100%; text-align:center;">Paket wählen</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 PEAR. Alle Rechte vorbehalten. | <a href="#">Impressum</a> | <a href="#">Datenschutz</a></p>
+        </div>
+    </footer>
+
+</body>
+</html>

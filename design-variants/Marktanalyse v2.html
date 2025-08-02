@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marktanalyse PEAR</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --pear-primary: #4CAF50;
+            --pear-secondary: #2196F3;
+            --pear-text: #1E293B;
+            --pear-background-light: #F8F9FA;
+            --pear-white: #fff;
+            --pear-accent-red: #f44336;
+            --pear-gradient-from: #2DD4BF;
+            --pear-gradient-to: #A3E635;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--pear-text);
+            line-height: 1.6;
+            background-color: var(--pear-white);
+            margin: 0;
+            padding: 0;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Montserrat', sans-serif;
+            color: var(--pear-primary);
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+        }
+
+        h1 { font-size: 2.5em; font-weight: 800; text-align: center; color: var(--pear-white); }
+        h2 { font-size: 2em; font-weight: 700; color: var(--pear-primary); }
+        h3 { font-size: 1.5em; font-weight: 600; color: var(--pear-secondary); }
+        h4 { font-size: 1.2em; font-weight: 600; color: var(--pear-text); }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--pear-white);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-radius: 8px;
+        }
+
+        .header-section {
+            background: linear-gradient(to right, var(--pear-gradient-from), var(--pear-gradient-to));
+            color: var(--pear-white);
+            padding: 40px 20px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+            margin-bottom: 20px;
+        }
+
+        .section-card {
+            background-color: var(--pear-background-light);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+        }
+
+        .kpi-card {
+            background-color: var(--pear-secondary);
+            color: var(--pear-white);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .kpi-card.accent {
+            background-color: var(--pear-primary);
+        }
+
+        ul {
+            list-style: disc;
+            margin-left: 20px;
+            margin-bottom: 1em;
+        }
+
+        ol {
+            list-style: decimal;
+            margin-left: 20px;
+            margin-bottom: 1em;
+        }
+
+        code {
+            background-color: #e0e0e0;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-family: 'monospace';
+            font-size: 0.9em;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1em;
+            margin-bottom: 1em;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--pear-primary);
+            color: var(--pear-white);
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+            background-color: var(--pear-white);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        @media print {
+            body {
+                background-color: var(--pear-white);
+            }
+            .container {
+                box-shadow: none;
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                max-width: none;
+            }
+            .header-section {
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-section">
+        <h1>Marktanalyse PEAR</h1>
+        <p class="text-lg text-blue-100">Potenziale und Strategien für den Goldstandard in der Alltagsbegleitung</p>
+    </div>
+
+    <div class="container">
+        <p class="mb-4">Diese Analyse beleuchtet das Marktpotenzial für Ihre Softwarelösung PEAR. PEAR ist eine Webanwendung, die entwickelt wurde, um die administrativen Aufgaben von Alltagsbegleitern in der Seniorenpflege zu digitalisieren und zu automatisieren. Das Ziel ist es, den Verwaltungsaufwand zu reduzieren, die Effizienz zu steigern und mehr Zeit für die direkte Betreuung der Klienten zu schaffen.</p>
+
+        <h2 class="text-2xl font-bold">1. Zielmarkt</h2>
+        <p class="mb-4">Der primäre Zielmarkt für PEAR sind Alltagsbegleiter, Betreuungsdienste und kleine bis mittlere Pflegedienste in Deutschland, die Dienstleistungen nach § 45a SGB XI (Entlastungsleistungen) und andere Betreuungsangebote erbringen.</p>
+
+        <h2 class="text-2xl font-bold">2. Marktgröße und Wachstum</h2>
+        <p class="mb-4">Der Markt für Pflegesoftware in Deutschland befindet sich in einer starken Wachstumsphase. Angetrieben durch den demografischen Wandel und den zunehmenden Fachkräftemangel in der Pflege, steigt der Bedarf an digitalen Lösungen, die Effizienz und Qualität in der Versorgung verbessern.</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
+            <div class="kpi-card">
+                Globales Marktwachstum Langzeitpflegesoftware:
+                <br>
+                <strong>4,98 Mrd. USD (2023) auf 6,94 Mrd. USD (2028)</strong>
+            </div>
+            <div class="kpi-card accent">
+                COVID-19-Pandemie hat Digitalisierungstrend beschleunigt.
+            </div>
+        </div>
+
+        <h2 class="text-2xl font-bold">3. Treiber und Trends</h2>
+        <ul class="list-disc ml-6 mb-4">
+            <li><strong>Gesetzliche Initiativen:</strong> Das Digitale-Versorgung-und-Pflege-Modernisierungs-Gesetz (DVPMG) treibt die Digitalisierung in der Pflege aktiv voran. Die Anbindung an die Telematikinfrastruktur (TI), die Einführung der elektronischen Patientenakte (ePA) und digitale Pflegeanwendungen (DiPA) werden zu zentralen Elementen. PEAR ist mit seinem Fokus auf Digitalisierung hier hervorragend positioniert.</li>
+            <li><strong>Fachkräftemangel und Effizienzdruck:</strong> Der hohe administrative Aufwand bindet wertvolle Ressourcen, die in der direkten Pflege fehlen. Softwarelösungen, die nachweislich Zeit sparen – wie von PEAR angestrebt –, treffen einen zentralen Nerv der Branche.</li>
+            <li><strong>Mobile Arbeit:</strong> Der Bedarf an mobilen Lösungen für die Leistungserfassung und den Zugriff auf Klientendaten direkt vor Ort ist hoch. Wettbewerber wie MD Ambulant und HeyCarla bewerben ihre mobilen Apps prominent. Die in Ihrer Dokumentation erwähnte <code>deploy_frontend.sh</code> für die mobile Ansicht ist ein wichtiger Schritt in diese Richtung.</li>
+        </ul>
+
+        <h2 class="text-2xl font-bold">4. Wettbewerbsumfeld</h2>
+        <p class="mb-4">Der Markt für Pflegesoftware in Deutschland ist fragmentiert, mit einigen etablierten Anbietern und neueren, agileren Wettbewerbern.</p>
+        <h3 class="text-xl font-semibold">Hauptwettbewerber:</h3>
+        <ul class="list-disc ml-6 mb-4">
+            <li><strong>MEDIFOX DAN (MD Ambulant):</strong> Etablierter Anbieter, modulare Software von Tourenplanung bis Abrechnung.</li>
+            <li><strong>HeyCarla:</strong> Positioniert sich als "smarte Lösung für Alltagshilfe & Betreuung", Fokus auf Automatisierung von Verwaltungsaufgaben.</li>
+            <li><strong>Fortytools:</strong> Reine Cloud-Lösung, speziell für Betreuungsdienste und Alltagshilfen, einfaches Abomodell.</li>
+            <li><strong>DMRZ.de:</strong> Rechenzentrum mit Online-Abrechnung von Betreuungs- und Entlastungsleistungen, kombiniert mit Pflegesoftware.</li>
+            <li><strong>euregon AG (.snap ambulant STARTER):</strong> Spezielle Pakete für kleine Pflegedienste und Gründer.</li>
+        </ul>
+
+        <h2 class="text-2xl font-bold">5. Finanzielle Analyse des Wettbewerbs</h2>
+        <p class="mb-4">Die Transparenz bei Umsatzzahlen privat geführter Unternehmen und Start-ups in Deutschland ist begrenzt. Detaillierte Umsatzhistorien sind selten öffentlich. Dennoch wurden die wichtigsten verfügbaren Datenpunkte und Kennzahlen zusammengetragen.</p>
+
+        <h3 class="text-xl font-semibold">5.1 MEDIFOX DAN (als Teil von ResMed)</h3>
+        <p class="mb-2"><strong>Marktposition:</strong> MEDIFOX DAN ist der unangefochtene Marktführer in Deutschland. Das Unternehmen wurde 2022 für rund 1 Milliarde US-Dollar vom US-Medizintechnikkonzern ResMed gekauft, was seine strategische Bedeutung unterstreicht.</p>
+        <p class="mb-2"><strong>Verfügbare Umsatzzahlen:</strong></p>
+        <ul class="list-disc ml-6 mb-4">
+            <li>2024 (Stand 30.06.2024): 95,1 Millionen €</li>
+            <li>2021: ca. 79 Millionen € (umgerechnet 83 Mio. US-Dollar)</li>
+        </ul>
+        <p class="mb-4"><strong>Analyse:</strong> MEDIFOX DAN zeigt ein starkes und konstantes Wachstum. Die Umsatzzahlen sind die mit Abstand höchsten im direkten Vergleich. Die Daten von North Data belegen die dominante Stellung.</p>
+
+        <h3 class="text-xl font-semibold">5.2 euregon AG</h3>
+        <p class="mb-2"><strong>Marktposition:</strong> Ein etablierter und wichtiger Akteur im Markt, der als Aktiengesellschaft (AG) etwas transparenter ist.</p>
+        <p class="mb-2"><strong>Verfügbare Finanzdaten:</strong> Direkte Umsatzzahlen werden nicht explizit als Zeitreihe ausgewiesen. North Data liefert jedoch Einblicke durch andere Kennzahlen:</p>
+        <ul class="list-disc ml-6 mb-4">
+            <li>Rohergebnis (Stand 31.10.2023): 14,5 Millionen €</li>
+            <li>Bilanzsumme (Stand 31.10.2023): 12,3 Millionen €</li>
+            <li>Löhne und Gehälter (als Indikator für die Größe): 5,5 Millionen €</li>
+        </ul>
+        <p class="mb-4"><strong>Analyse:</strong> euregon ist ein sehr solides, profitables Unternehmen. Das Rohergebnis lässt auf einen signifikanten zweistelligen Millionenumsatz schließen. Die Zahlen deuten auf eine stabile und starke Marktposition hinter MEDIFOX DAN hin.</p>
+
+        <h3 class="text-xl font-semibold">5.3 Kleinere & neuere Anbieter (HeyCarla, Fortytools)</h3>
+        <p class="mb-2">Die Datenlage ist hier erwartungsgemäß dünn, da es sich um kleinere, oft gründergeführte Unternehmen handelt.</p>
+        <ul class="list-disc ml-6 mb-4">
+            <li><strong>HeyCarla:</strong> Keine öffentlichen Umsatzzahlen verfügbar. Wachstum wird eher über Nutzerzahlen oder Finanzierungsrunden kommuniziert, die aber ebenfalls nicht öffentlich sind.</li>
+            <li><strong>Fortytools:</strong> Ein Blogartikel auf deren eigener Seite nennt "Umsatz der Gruppe: ca. 900.000 Euro" (nicht datiert).</li>
+        </ul>
+        <p class="mb-4"><strong>Analyse:</strong> Fortytools bewegt sich im soliden sechs- bis knapp siebenstelligen Umsatzbereich. Dies zeigt, dass auch spezialisierte, kleinere Anbieter ein nachhaltiges Geschäft aufbauen können, sie aber von der Größenordnung eines Anbieters wie MEDIFOX DAN oder euregon weit entfernt sind.</p>
+
+        <h3 class="text-xl font-semibold">5.4 Zusammenfassung der Finanzdaten</h3>
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white">
+                <thead>
+                    <tr>
+                        <th class="py-2 px-4 text-left text-xs font-medium text-white uppercase tracking-wider">Unternehmen</th>
+                        <th class="py-2 px-4 text-left text-xs font-medium text-white uppercase tracking-wider">Letzter bekannter Umsatz</th>
+                        <th class="py-2 px-4 text-left text-xs font-medium text-white uppercase tracking-wider">Geschätzte Größenordnung</th>
+                        <th class="py-2 px-4 text-left text-xs font-medium text-white uppercase tracking-wider">Kommentar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="py-2 px-4 whitespace-nowrap">MEDIFOX DAN</td>
+                        <td class="py-2 px-4 whitespace-nowrap">95,1 Mio. € (2024)</td>
+                        <td class="py-2 px-4 whitespace-nowrap">Sehr groß (> 80 Mio. €)</td>
+                        <td class="py-2 px-4">Klarer Marktführer, finanzstark durch ResMed.</td>
+                    </tr>
+                    <tr>
+                        <td class="py-2 px-4 whitespace-nowrap">euregon AG</td>
+                        <td class="py-2 px-4 whitespace-nowrap">Nicht explizit, aber Rohergebnis von 14,5 Mio. € (2023)</td>
+                        <td class="py-2 px-4 whitespace-nowrap">Groß (vermutlich 15-25 Mio. €)</td>
+                        <td class="py-2 px-4">Etablierter, profitabler Player, Hauptwettbewerber auf Augenhöhe.</td>
+                    </tr>
+                    <tr>
+                        <td class="py-2 px-4 whitespace-nowrap">Fortytools</td>
+                        <td class="py-2 px-4 whitespace-nowrap">ca. 900.000 € (nicht datiert)</td>
+                        <td class="py-2 px-4 whitespace-nowrap">Klein (< 1 Mio. €)</td>
+                        <td class="py-2 px-4">Beispiel für eine erfolgreiche Nischenlösung.</td>
+                    </tr>
+                    <tr>
+                        <td class="py-2 px-4 whitespace-nowrap">HeyCarla</td>
+                        <td class="py-2 px-4 whitespace-nowrap">Keine Daten verfügbar</td>
+                        <td class="py-2 px-4 whitespace-nowrap">Klein (vermutlich < 1 Mio. €)</td>
+                        <td class="py-2 px-4">Typische Datenlage für ein neueres, privates Unternehmen.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="chart-container mt-8">
+            <canvas id="revenueComparisonChart"></canvas>
+        </div>
+
+        <h2 class="text-2xl font-bold">6. Preisgestaltung im Wettbewerbsumfeld & Empfehlung für PEAR</h2>
+        <h3 class="text-xl font-semibold">Wettbewerbspreise:</h3>
+        <ul class="list-disc ml-6 mb-4">
+            <li><strong>Monatliche Abonnements:</strong> Viele Anbieter staffeln Preise nach Mitarbeiter-/Klientenzahl (z.B., meinpflegedienst.com: 149 € - 199 €/Monat; andere: 195 € - 800 €/Monat).</li>
+            <li><strong>Einmalige Lizenzgebühren:</strong> euregon bietet Starter-Pakete für 5.990 € - 9.990 € an.</li>
+        </ul>
+        <h3 class="text-xl font-semibold">Empfehlung für PEAR:</h3>
+        <p class="mb-4">Ein <strong>monatliches, gestaffeltes Abonnementmodell</strong>, orientiert an der Anzahl der aktiven Klienten oder Mitarbeiter, wäre für PEAR am sinnvollsten. Dies ermöglicht einen niedrigschwelligen Einstieg für Gründer und kleine Dienste und skaliert mit deren Wachstum. Ein kostenloses Testpaket oder eine Freemium-Version mit Basisfunktionen könnte die Markteinführung unterstützen.</p>
+
+        <h2 class="text-2xl font-bold">7. Chancen und Herausforderungen für PEAR</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
+            <div class="section-card bg-green-100 text-green-800">
+                <h3 class="text-xl font-semibold text-green-700">Chancen:</h3>
+                <ul class="list-disc ml-6">
+                    <li><strong>Hoher Digitalisierungsbedarf:</strong> Viele kleine Dienste arbeiten noch manuell und sind offen für einfache, kostengünstige digitale Lösungen.</li>
+                    <li><strong>Nischenfokus:</strong> Klare Ausrichtung auf Alltagsbegleiter ermöglicht gezielte Ansprache.</li>
+                    <li><strong>Technologievorsprung:</strong> KI-Integration bietet klaren Mehrwert und Differenzierung.</li>
+                </ul>
+            </div>
+            <div class="section-card bg-red-100 text-red-800">
+                <h3 class="text-xl font-semibold text-red-700">Herausforderungen:</h3>
+                <ul class="list-disc ml-6">
+                    <li><strong>Marktfragmentierung:</strong> Viele Anbieter erfordern überzeugenden Markteintritt.</li>
+                    <li><strong>Vertrauen und Sicherheit:</strong> Datenschutz (DSGVO) und Datensicherheit sind bei sensiblen Daten von höchster Bedeutung.</li>
+                    <li><strong>Benutzerfreundlichkeit:</strong> Zielgruppe ist oft nicht IT-affin; intuitive Oberfläche ist entscheidend.</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="text-2xl font-bold">8. Fazit</h2>
+        <p class="mb-4">Der Markt für Pflegesoftware in Deutschland bietet für PEAR vielversprechende Chancen. Das Produkt adressiert mit seiner klarer Fokussierung auf die Bedürfnisse von Alltagsbegleitern und der innovativen KI-gestützten Datenextraktion eine relevante und wachsende Nische. Um erfolgreich zu sein, sollte PEAR seine Alleinstellungsmerkmale klar kommunizieren, ein flexibles und transparentes Preismodell anbieten und höchsten Wert auf Datensicherheit und eine intuitive Benutzeroberfläche legen.</p>
+
+        <h2 class="text-2xl font-bold">9. Quellenangaben</h2>
+        <ul class="list-disc ml-6 text-sm text-gray-600">
+            <li>[1.1] MD Ambulant für Betreuungsdienste - MEDIFOX DAN: <a href="https://www.medifoxdan.de/software-ambulante-pflege/betreuungsdienste/" target="_blank" class="text-blue-500 hover:underline">https://www.medifoxdan.de/software-ambulante-pflege/betreuungsdienste/</a></li>
+            <li>[1.2] HeyCarla - Die Software für Alltagshilfe & Betreuungsdienste: <a href="https://www.heycarla.app/" target="_blank" class="text-blue-500 hover:underline">https://www.heycarla.app/</a></li>
+            <li>[1.3] Analyse der Marktgröße und des Anteils von Langzeitpflegesoftware - Mordor Intelligence: <a href="https://www.mordorintelligence.com/de/industry-reports/long-term-care-software-market" target="_blank" class="text-blue-500 hover:underline">https://www.mordorintelligence.com/de/industry-reports/long-term-care-software-market</a></li>
+            <li>[3.1] Büro-Software speziell für Betreuungsdienste & Alltagshilfe - Fortytools: <a href="https://www.fortytools.com/branchen-software-fuer/alltagshilfe-betreuungsdienste" target="_blank" class="text-blue-500 hover:underline">https://www.fortytools.com/branchen-software-fuer/alltagshilfe-betreuungsdienste</a></li>
+            <li>[3.2] So einfach rechnen Sie Betreuungs- und Entlastungsleistungen ab - Deutsches Medizinrechenzentrum: <a href="https://www.dmrz.de/fuer-wen/pflege/betreuungsdienste" target="_blank" class="text-blue-500 hover:underline">https://www.dmrz.de/fuer-wen/pflege/betreuungsdienste</a></li>
+            <li>[2.1] Arbeitsentlastung durch Pflegesoftware - Bertelsmann Stiftung: <a href="https://www.bertelsmann-stiftung.de/fileadmin/files/PicturePark/2024-03/Arbeitsentlastung_durch_Pflegesoftware.pdf" target="_blank" class="text-blue-500 hover:underline">https://www.bertelsmann-stiftung.de/fileadmin/files/PicturePark/2024-03/Arbeitsentlastung_durch_Pflegesoftware.pdf</a></li>
+            <li>[4.1] Preisliste - meinpflegedienst.com: <a href="https://meinpflegedienst.com/preisliste/index.html" target="_blank" class="text-blue-500 hover:underline">https://meinpflegedienst.com/preisliste/index.html</a></li>
+            <li>[4.2] snap ambulant STARTER: Software für kleine Pflegedienste - euregon AG: <a href="https://euregon.de/software/kleine-pflegedienste/" target="_blank" class="text-blue-500 hover:underline">https://euregon.de/software/kleine-pflegedienste/</a></li>
+            <li>[4.4] Transparente Preise für die Pflegedienst Software - ambulante-pflege-software.de: <a href="https://ambulante-pflege-software.de/pflegedienst-software-preise" target="_blank" class="text-blue-500 hover:underline">https://ambulante-pflege-software.de/pflegedienst-software-preise</a></li>
+            <li>[5.1] Ambulante Pflege - Leben Pflege Digital: <a href="https://www.lebenpflegedigital.de/berufliche-pflege/ambulante-pflege/" target="_blank" class="text-blue-500 hover:underline">https://www.lebenpflegedigital.de/berufliche-pflege/ambulante-pflege/</a></li>
+            <li>[5.2] Telematikinfrastruktur – was Pflegedienste und Einrichtungen wissen sollten - sozialfactoring.de: <a href="https://www.sozialfactoring.de/blog/allgemein/telematikinfrastruktur-was-pflegedienste-und-einrichtungen-wissen-sollten/" target="_blank" class="text-blue-500 hover:underline">https://www.sozialfactoring.de/blog/allgemein/telematikinfrastruktur-was-pflegedienste-und-einrichtungen-wissen-sollten/</a></li>
+            <li>[5.4] Digitalisierung in der ambulanten Pflege: Technologie trifft Menschlichkeit - TechNavigator: <a href="https://technavigator.de/digitalisierung/branchen/ambulanten-pflege/" target="_blank" class="text-blue-500 hover:underline">https://technavigator.de/digitalisierung/branchen/ambulanten-pflege/</a></li>
+        </ul>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            function wrapLabel(label) {
+                if (typeof label !== 'string') return label;
+                if (label.length <= 16) return label;
+                const words = label.split(' ');
+                let lines = [];
+                let currentLine = '';
+                for (const word of words) {
+                    if ((currentLine + word).length > 16 && currentLine !== '') {
+                        lines.push(currentLine.trim());
+                        currentLine = word + ' ';
+                    } else {
+                        currentLine += word + ' ';
+                    }
+                }
+                lines.push(currentLine.trim());
+                return lines;
+            }
+
+            const tooltipTitleCallback = function(tooltipItems) {
+                const item = tooltipItems[0];
+                let label = item.chart.data.labels[item.dataIndex];
+                if (Array.isArray(label)) {
+                    return label.join(' ');
+                } else {
+                    return label;
+                }
+            };
+            
+            const commonTooltipOptions = {
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            title: tooltipTitleCallback
+                        }
+                    }
+                }
+            };
+
+            // Chart.js - Bar Chart for Revenue Comparison
+            const revenueComparisonCtx = document.getElementById('revenueComparisonChart');
+            if (revenueComparisonCtx) {
+                new Chart(revenueComparisonCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: [wrapLabel('MEDIFOX DAN (2024)'), wrapLabel('Fortytools (n.d.)')],
+                        datasets: [{
+                            label: 'Bekannter Umsatz (€ Mio.)',
+                            data: [95.1, 0.9],
+                            backgroundColor: [
+                                'rgba(0, 74, 173, 0.6)',
+                                'rgba(76, 175, 80, 0.6)'
+                            ],
+                            borderColor: [
+                                'rgba(0, 74, 173, 1)',
+                                'rgba(76, 175, 80, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        ...commonTooltipOptions,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Umsatz in Millionen €'
+                                }
+                            }
+                        },
+                        plugins: {
+                            ...commonTooltipOptions.plugins,
+                            title: {
+                                display: true,
+                                text: 'Umsatzvergleich: Marktführer vs. Nischenanbieter'
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

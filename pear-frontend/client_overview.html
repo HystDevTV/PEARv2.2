@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klientenübersicht - PEAR</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Verweis auf die globalen und die App-Stile -->
+    <link rel="stylesheet" href="global.css">
+    <link rel="stylesheet" href="app.css">
+</head>
+<body class="app-body">
+
+    <!-- 1. Vollflächiger Header der App -->
+    <header class="app-header">
+        <div class="app-header-content">
+            <a href="images/logo.png" class="logo-link">
+                <!-- Pfad zum Logo anpassen, falls nötig -->
+                <img src="PEAR_Logo.jpg" alt="PEAR Logo" class="logo-image">
+                <span class="logo-name">PEAR</span>
+            </a>
+            <h1 class="page-title">Klientenübersicht</h1>
+            <div class="header-placeholder"></div> <!-- Platzhalter für symmetrisches Layout -->
+        </div>
+    </header>
+
+    <!-- 2. Zweigeteilter Hauptbereich der App -->
+    <div class="app-layout">
+        <!-- Linke Spalte: Sidebar-Navigation -->
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <a href="#">Dashboard</a>
+                <a href="client_overview.html" class="active">Klienten</a>
+                <a href="#">Termine</a>
+                <a href="invoice_overview.html">Rechnungen</a>
+                <a href="#">Dokumentation</a>
+                <a href="#">Profil</a>
+                <a href="#">Logout</a>
+            </nav>
+        </aside>
+
+        <!-- Rechte Spalte: Hauptinhalt -->
+        <main class="main-content">
+            <!-- Filter-Möglichkeiten (jetzt Pillenform, wie in der Rechnungsübersicht) -->
+            <div class="stats-grid">
+                <div class="stat-card active open"> <!-- Active-Klasse für den ausgewählten Filter -->
+                    <span class="stat-title">Aktiv</span>
+                    <span class="stat-value">4</span>
+                    <span class="stat-count">Klienten</span>
+                </div>
+                <div class="stat-card paid"> <!-- Hier "Bezahlt" als Beispiel für "Inaktiv" -->
+                    <span class="stat-title">Inaktiv</span>
+                    <span class="stat-value">1</span>
+                    <span class="stat-count">Klient</span>
+                </div>
+                <div class="stat-card overdue"> <!-- Hier "Überfällig" als Beispiel für "Gesamt" -->
+                    <span class="stat-title">Gesamt</span>
+                    <span class="stat-value">5</span>
+                    <span class="stat-count">Klienten</span>
+                </div>
+            </div>
+
+            <!-- Aktionsleiste -->
+            <div class="action-bar">
+                <div class="search-group">
+                    <input type="text" placeholder="Klienten suchen...">
+                    <select>
+                        <option>Alle Status</option>
+                        <option>Aktiv</option>
+                        <option>Inaktiv</option>
+                        <option>Ausgesetzt</option> <!-- Option hinzugefügt -->
+                    </select>
+                    <button class="btn btn-secondary">Suchen</button>
+                </div>
+                <button class="btn btn-primary">Neuen Klient anlegen</button>
+            </div>
+
+            <!-- Klienten in Tabellenform (wie im Beispielbild der Rechnungen) -->
+            <div class="client-table-container">
+                <table class="client-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Adresse</th>
+                            <th>Status</th>
+                            <th>Geplante Std./Woche</th>
+                            <th>Aktionen</th> <!-- Hinzugefügt für Konsistenz, auch wenn leer -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Beispiel-Klientenzeilen -->
+                        <tr onclick="window.location.href='client_details.html?id=1';">
+                            <td data-label="Name">Max Mustermann</td>
+                            <td data-label="Adresse">Musterstr. 1, 12345 Musterstadt</td>
+                            <td data-label="Status"><span class="status-badge status-active">Aktiv</span></td>
+                            <td data-label="Geplante Std./Woche">5</td>
+                            <td data-label="Aktionen"><a href="client_details.html?id=1" class="btn btn-secondary btn-small">Ansehen</a></td>
+                        </tr>
+                        <tr onclick="window.location.href='client_details.html?id=2';">
+                            <td data-label="Name">Anna Schmidt</td>
+                            <td data-label="Adresse">Beispielweg 42, 98765 Beispielingen</td>
+                            <td data-label="Status"><span class="status-badge status-active">Aktiv</span></td>
+                            <td data-label="Geplante Std./Woche">10</td>
+                            <td data-label="Aktionen"><a href="client_details.html?id=2" class="btn btn-secondary btn-small">Ansehen</a></td>
+                        </tr>
+                        <tr onclick="window.location.href='client_details.html?id=3';">
+                            <td data-label="Name">Gerda Müller</td>
+                            <td data-label="Adresse">Sonnenallee 7, 54321 Sonnenstadt</td>
+                            <td data-label="Status"><span class="status-badge status-inactive">Inaktiv</span></td>
+                            <td data-label="Geplante Std./Woche">0</td>
+                            <td data-label="Aktionen"><a href="client_details.html?id=3" class="btn btn-secondary btn-small">Ansehen</a></td>
+                        </tr>
+                        <tr onclick="window.location.href='client_details.html?id=4';">
+                            <td data-label="Name">Hans-Peter Weber</td>
+                            <td data-label="Adresse">Hauptstraße 101, 10115 Berlin</td>
+                            <td data-label="Status"><span class="status-badge status-paused">Ausgesetzt</span></td> <!-- Beispiel für "Ausgesetzt" -->
+                            <td data-label="Geplante Std./Woche">8</td>
+                            <td data-label="Aktionen"><a href="client_details.html?id=4" class="btn btn-secondary btn-small">Ansehen</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- 3. Vollflächiger Footer der App -->
+    <footer class="app-footer">
+        <div class="container">
+            <p>&copy; 2025 PEAR. Mit ❤️ entwickelt für Heldinnen und Helden des Alltags.</p>
+            <div class="footer-links">
+                <a href="impressum.html" class="footer-btn">Impressum</a>
+                <a href="#" class="footer-btn">Datenschutz</a>
+                <a href="#" class="footer-btn">AGB</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rechnungsübersicht - PEAR</title>
+    <!-- Import Google Fonts direkt, falls global.css nicht geladen wird oder für Konsistenz -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Verweis auf die globalen und die App-Stile -->
+    <!-- Stellen Sie sicher, dass diese Dateien im selben Verzeichnis wie diese HTML-Datei liegen oder der Pfad korrekt ist -->
+    <link rel="stylesheet" href="global.css">
+    <link rel="stylesheet" href="app.css">
+</head>
+<body class="app-body">
+
+    <!-- 1. Vollflächiger Header der App -->
+    <header class="app-header">
+        <div class="app-header-content">
+            <a href="index.html" class="logo-link">
+                <!-- Pfad zum Logo anpassen, falls nötig -->
+                <img src="images/logo.png" alt="PEAR Logo" class="logo-image">
+                <span class="logo-name">PEAR</span>
+            </a>
+            <h1 class="page-title">Rechnungsübersicht</h1>
+            <div class="header-placeholder"></div> <!-- Platzhalter für symmetrisches Layout -->
+        </div>
+    </header>
+
+    <!-- 2. Zweigeteilter Hauptbereich der App -->
+    <div class="app-layout">
+        <!-- Linke Spalte: Sidebar-Navigation -->
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <a href="#">Dashboard</a>
+                <a href="#">Klienten</a>
+                <a href="#">Termine</a>
+                <a href="invoice_overview.html" class="active">Rechnungen</a>
+                <a href="#">Dokumentation</a>
+                <a href="#">Profil</a>
+                <a href="#">Logout</a>
+            </nav>
+        </aside>
+
+        <!-- Rechte Spalte: Hauptinhalt -->
+        <main class="main-content">
+            <!-- Filter-Möglichkeiten (jetzt Pillenform, wie im Beispielbild) -->
+            <div class="stats-grid">
+                <div class="stat-card active open"> <!-- Active-Klasse für den ausgewählten Filter -->
+                    <span class="stat-title">Offen</span>
+                    <span class="stat-value">570,00 €</span>
+                    <span class="stat-count">2 Rechnungen</span>
+                </div>
+                <div class="stat-card paid">
+                    <span class="stat-title">Bezahlt</span>
+                    <span class="stat-value">150,00 €</span>
+                    <span class="stat-count">1 Rechnung</span>
+                </div>
+                <div class="stat-card overdue">
+                    <span class="stat-title">Überfällig</span>
+                    <span class="stat-value">175,50 €</span>
+                    <span class="stat-count">1 Rechnung</span>
+                </div>
+            </div>
+
+            <!-- Andere Navigationsbuttons (Aktionsleiste) -->
+            <div class="action-bar">
+                <div class="search-group">
+                    <input type="text" placeholder="Suche nach Klient oder Rechnungsnr....">
+                    <button class="btn btn-secondary">Suchen</button>
+                </div>
+                <button class="btn btn-primary">Neue Rechnung erstellen</button>
+            </div>
+
+            <!-- Rechnungen in Tabellenform (wie im Beispielbild) -->
+            <div class="invoice-table-container">
+                <table class="invoice-table">
+                    <thead>
+                        <tr>
+                            <th>Klient</th>
+                            <th>Rechnungsnr.</th>
+                            <th>Betrag</th>
+                            <th>Fälligkeit</th>
+                            <th>Status</th>
+                            <th>Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Beispiel-Rechnungszeilen, die hier dynamisch geladen werden könnten -->
+                        <tr>
+                            <td data-label="Klient">Max Mustermann</td>
+                            <td data-label="Rechnungsnr.">#2025-001</td>
+                            <td data-label="Betrag">150,00 €</td>
+                            <td data-label="Fälligkeit">30.07.2025</td>
+                            <td data-label="Status"><span class="status-badge status-paid">Bezahlt</span></td>
+                            <td data-label="Aktionen"><a href="#" class="btn btn-secondary btn-small">Ansehen</a></td>
+                        </tr>
+                        <tr>
+                            <td data-label="Klient">Anna Schmidt</td>
+                            <td data-label="Rechnungsnr.">#2025-002</td>
+                            <td data-label="Betrag">250,00 €</td>
+                            <td data-label="Fälligkeit">31.07.2025</td>
+                            <td data-label="Status"><span class="status-badge status-open">Offen</span></td>
+                            <td data-label="Aktionen"><a href="#" class="btn btn-secondary btn-small">Ansehen</a></td>
+                        </tr>
+                        <tr>
+                            <td data-label="Klient">Peter Müller</td>
+                            <td data-label="Rechnungsnr.">#2025-003</td>
+                            <td data-label="Betrag">175,50 €</td>
+                            <td data-label="Fälligkeit">15.07.2025</td>
+                            <td data-label="Status"><span class="status-badge status-overdue">Überfällig</span></td>
+                            <td data-label="Aktionen"><a href="#" class="btn btn-secondary btn-small">Ansehen</a></td>
+                        </tr>
+                        <tr>
+                            <td data-label="Klient">Maria Lehmann</td>
+                            <td data-label="Rechnungsnr.">#2025-004</td>
+                            <td data-label="Betrag">320,00 €</td>
+                            <td data-label="Fälligkeit">05.08.2025</td>
+                            <td data-label="Status"><span class="status-badge status-open">Offen</span></td>
+                            <td data-label="Aktionen"><a href="#" class="btn btn-secondary btn-small">Ansehen</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- 3. Vollflächiger Footer der App -->
+    <footer class="app-footer">
+        <div class="container">
+            <p>&copy; 2025 PEAR. Mit ❤️ entwickelt für Heldinnen und Helden des Alltags.</p>
+            <div class="footer-links">
+                <a href="impressum.html" class="footer-btn">Impressum</a>
+                <a href="#" class="footer-btn">Datenschutz</a>
+                <a href="#" class="footer-btn">AGB</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

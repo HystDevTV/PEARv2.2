@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - PEAR</title>
+    
+    <!-- Verweis auf die globalen und die gemeinsamen Auth-Stile -->
+    <link rel="stylesheet" href="global.css">
+    <link rel="stylesheet" href="auth.css">
+</head>
+<body>
+
+    <!-- Globaler Header -->
+    <header>
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo-link">
+                    <img src="images/logo.png" alt="PEAR Logo" class="logo-image">
+                    <div class="logo-text-container">
+                        <span class="logo-name">PEAR</span>
+                        <span class="logo-tagline">Professionelle Einsatz-, Abrechnungs- und Ressourcenverwaltung</span>
+                    </div>
+                </a>
+                
+                <div class="nav-right">
+                    <div class="nav-links">
+                        <a href="index.html#features">Features</a>
+                        <a href="index.html#pricing">Preise</a>
+                        <a href="index.html#contact">Kontakt</a>
+                    </div>
+                    <div>
+                        <a href="register.html" class="btn btn-secondary">Registrieren</a>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="auth-container">
+        <!-- Linke Seite: Branding -->
+        <div class="auth-branding">
+            <div class="branding-content">
+                <div class="logo-blob-container">
+                    <img src="images/logo.png" alt="PEAR Logo" class="branding-logo">
+                </div>
+                <h1>Willkommen zurück!</h1>
+                <p>Melden Sie sich an, um Ihren Arbeitsalltag zu vereinfachen.</p>
+            </div>
+        </div>
+
+        <!-- Rechte Seite: Formular -->
+        <div class="auth-form-container">
+            <div class="form-content">
+                <h2>Anmelden</h2>
+                <form action="#" method="POST">
+                    <div class="form-group">
+                        <label for="email">E-Mail-Adresse</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Passwort</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    <div class="form-options">
+                        <a href="#" class="forgot-password">Passwort vergessen?</a>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">Anmelden</button>
+                </form>
+                <p class="auth-switch">Noch kein Konto? <a href="register.html">Jetzt registrieren</a></p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Globale Fußzeile -->
+    <footer>
+    <div class="container">
+        <p>&copy; 2025 PEAR. Mit ❤️ entwickelt für Heldinnen und Helden des Alltags.</p>
+        <div class="footer-links mt-4">
+            <a href="impressum.html" class="footer-btn">Impressum</a>
+            <a href="#" class="footer-btn">Datenschutz</a>
+            <a href="#" class="footer-btn">AGB</a>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>

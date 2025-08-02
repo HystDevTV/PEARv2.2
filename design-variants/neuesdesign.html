@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webseite: Tech & Frische</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* DEFINITION DER FARBPALETTE "TECH & FRISCHE" */
+        :root {
+            --bg-techgruen: #1c3329; /* Klares, dunkles Tech-Grün */
+            --text-weiss: #FFFFFF; /* Reines Weiß */
+            --akzent-braun: #B99470; /* Klares, neutrales Braun */
+            --akzent-frischgruen: #66CDAA; /* Frisches, mint-artiges Grün */
+            --border-color-default: rgba(102, 205, 170, 0.4); /* Leichter Rand im frischen Grün */
+        }
+
+        body {
+            background-color: var(--bg-techgruen);
+            color: var(--text-weiss);
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        /* Allgemeine Klassen für die Karten-Elemente */
+        .interactive-card {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color-default);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: border-color 0.3s ease, border-width 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+        }
+        
+        .interactive-card:hover {
+        background: var(--pear-white);
+        color: var(--pear-green);
+        border-color: var(--pear-mint);
+        box-shadow: 0 0 15px rgba(185, 148, 112, 0.3);
+}
+        
+        
+        .interactive-card h3 {
+            transition: color 0.3s ease;
+        }
+        .interactive-card:hover h3 {
+            color: var(--akzent-frischgruen);
+        }
+        
+        .interactive-card .card-icon {
+             color: var(--akzent-frischgruen);
+             transition: transform 0.3s ease;
+        }
+        .interactive-card:hover .card-icon {
+            transform: scale(1.1);
+        }
+
+        /* Stil für die Navigationsleiste */
+        nav a {
+            transition: color 0.3s ease;
+        }
+        nav a:hover {
+            color: var(--akzent-frischgruen);
+        }
+        nav a.active {
+            color: var(--akzent-frischgruen);
+            font-weight: 500;
+        }
+
+        /* Stil für das Balkendiagramm */
+        .bar-chart-bar {
+            background-color: var(--akzent-braun);
+            border-radius: 0.25rem;
+            text-align: right;
+            padding-right: 0.5rem;
+            color: var(--bg-techgruen);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        
+        /* Stile für die nummerierten Kreise */
+        .step-circle {
+            border: 2px solid var(--akzent-frischgruen);
+            color: var(--akzent-frischgruen);
+            transition: all 0.3s ease;
+        }
+
+        .step-circle:hover, .step-circle.active {
+            background-color: var(--akzent-braun);
+            border-color: var(--akzent-braun);
+            color: var(--bg-techgruen);
+            font-weight: 700;
+        }
+        
+        /* Stile für die ausklappbaren Inhalte */
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out, margin-top 0.5s ease-in-out;
+        }
+
+        .accordion-content.open {
+            max-height: 500px; /* Ausreichend Höhe für den Inhalt */
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- HEADER / NAVIGATION -->
+    <header class="p-4 md:p-6">
+        <nav class="container mx-auto flex justify-between items-center">
+            <div class="text-xl font-bold tracking-wider">
+                Ihr<span style="color: var(--akzent-braun);">Unternehmen</span>
+            </div>
+            <div class="hidden md:flex items-center space-x-8 text-sm uppercase tracking-widest">
+                <a href="#" class="active">Start</a>
+                <a href="#">Markt</a>
+                <a href="#">Lösung</a>
+                <a href="#">Strategie</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- HAUPTINHALT -->
+    <main class="container mx-auto p-4 md:p-8">
+
+        <!-- TITELBEREICH -->
+        <section class="text-center my-12 md:my-20">
+            <h1 class="text-4xl md:text-6xl font-bold leading-tight">Digitale Exzellenz, neu definiert.</h1>
+            <p class="text-lg md:text-xl mt-4 max-w-3xl mx-auto" style="color: var(--akzent-frischgruen);">
+                Wir schaffen innovative Lösungen, die Ihr Unternehmen zukunftssicher machen und nachhaltiges Wachstum fördern.
+            </p>
+        </section>
+
+        <!-- WETTBEWERBSANALYSE -->
+        <section class="my-16">
+            <div class="interactive-card text-center">
+                <h2 class="text-2xl md:text-3xl font-bold mb-2">Wettbewerbsanalyse: Jahresumsätze</h2>
+                <p class="text-base md:text-lg max-w-2xl mx-auto mb-8">Ein Blick auf die finanzielle Performance der vier Hauptakteure im Marktsegment.</p>
+                
+                <!-- Balkendiagramm -->
+                <div class="w-full max-w-3xl mx-auto space-y-5 text-left text-sm pt-4">
+                    <!-- Mitbewerber 1 -->
+                    <div class="flex items-center">
+                        <span class="w-40 pr-4 font-medium">Innovate AG</span>
+                        <div class="flex-1 h-8 bg-gray-800 rounded-md overflow-hidden">
+                            <div class="bar-chart-bar h-full flex items-center justify-end" style="width: 100%;">
+                                <span>€ 450 Mio.</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Mitbewerber 2 -->
+                    <div class="flex items-center">
+                        <span class="w-40 pr-4 font-medium">Synergy Corp.</span>
+                        <div class="flex-1 h-8 bg-gray-800 rounded-md overflow-hidden">
+                             <div class="bar-chart-bar h-full flex items-center justify-end" style="width: 78%;">
+                                <span>€ 350 Mio.</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Mitbewerber 3 -->
+                    <div class="flex items-center">
+                        <span class="w-40 pr-4 font-medium">Digital Solutions</span>
+                        <div class="flex-1 h-8 bg-gray-800 rounded-md overflow-hidden">
+                             <div class="bar-chart-bar h-full flex items-center justify-end" style="width: 60%; background-color: var(--akzent-frischgruen);">
+                                <span>€ 270 Mio.</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Mitbewerber 4 -->
+                    <div class="flex items-center">
+                        <span class="w-40 pr-4 font-medium">Future-Proof GmbH</span>
+                        <div class="flex-1 h-8 bg-gray-800 rounded-md overflow-hidden">
+                             <div class="bar-chart-bar h-full flex items-center justify-end" style="width: 40%; background-color: var(--akzent-frischgruen);">
+                                <span>€ 180 Mio.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- UNSERE LÖSUNG -->
+        <section class="my-20">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-4">Unsere Lösung: Die drei Säulen des Erfolgs</h2>
+            <p class="text-lg text-center mb-12" style="color: var(--akzent-frischgruen);">Unser Ansatz basiert auf drei Kernkompetenzen, die ineinandergreifen, um maximale Wirkung zu erzielen.</p>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Säule 1 -->
+                <div class="interactive-card">
+                    <div class="flex items-center mb-4">
+                        <svg class="card-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                        <h3 class="text-xl font-bold ml-3">Kunden-Zentrierung</h3>
+                    </div>
+                    <p class="text-sm opacity-80">Wir beginnen jede Überlegung beim Nutzer. Tiefes Verständnis für die Bedürfnisse Ihrer Zielgruppe ist die Basis für Produkte, die begeistern.</p>
+                </div>
+                <!-- Säule 2 -->
+                <div class="interactive-card">
+                     <div class="flex items-center mb-4">
+                        <svg class="card-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                        <h3 class="text-xl font-bold ml-3">Agile Entwicklung</h3>
+                    </div>
+                    <p class="text-sm opacity-80">In kurzen Zyklen entwickeln und testen wir Prototypen. So stellen wir sicher, dass wir auf Kurs bleiben und schnell auf Marktveränderungen reagieren.</p>
+                </div>
+                <!-- Säule 3 -->
+                <div class="interactive-card">
+                     <div class="flex items-center mb-4">
+                        <svg class="card-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"></path><rect x="4" y="8" width="8" height="12" rx="2"></rect><path d="M10 12h8a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"></path></svg>
+                        <h3 class="text-xl font-bold ml-3">Skalierbare Systeme</h3>
+                    </div>
+                    <p class="text-sm opacity-80">Wir bauen von Anfang an auf robuste und flexible Architekturen, die mit Ihrem Unternehmen wachsen können, ohne an Performance zu verlieren.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- STRATEGISCHER FAHRPLAN -->
+        <section class="my-20">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-12">Unser strategischer Fahrplan</h2>
+            <div id="accordion" class="space-y-4">
+                <!-- Schritt 1 -->
+                <div class="interactive-card cursor-pointer" onclick="toggleAccordion(1)">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xl font-bold">Phase 1: Analyse & Konzeption</h3>
+                        <div class="step-circle w-8 h-8 rounded-full flex items-center justify-center font-bold">1</div>
+                    </div>
+                    <div id="content-1" class="accordion-content">
+                        <p class="opacity-80 text-sm">Gemeinsame Workshops zur Definition der Ziele. Analyse des Marktes und der Zielgruppen. Erstellung einer detaillierten Roadmap und eines technischen Konzepts.</p>
+                    </div>
+                </div>
+                <!-- Schritt 2 -->
+                <div class="interactive-card cursor-pointer" onclick="toggleAccordion(2)">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xl font-bold">Phase 2: MVP Entwicklung & Launch</h3>
+                        <div class="step-circle w-8 h-8 rounded-full flex items-center justify-center font-bold">2</div>
+                    </div>
+                     <div id="content-2" class="accordion-content">
+                        <p class="opacity-80 text-sm">Entwicklung des Minimum Viable Product (MVP) mit den Kernfunktionen. Durchführung von User-Tests und Einholung von Feedback. Gezielter Launch für eine erste Nutzergruppe.</p>
+                    </div>
+                </div>
+                <!-- Schritt 3 -->
+                <div class="interactive-card cursor-pointer" onclick="toggleAccordion(3)">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xl font-bold">Phase 3: Skalierung & Optimierung</h3>
+                        <div class="step-circle w-8 h-8 rounded-full flex items-center justify-center font-bold">3</div>
+                    </div>
+                     <div id="content-3" class="accordion-content">
+                        <p class="opacity-80 text-sm">Basierend auf den Daten aus der Launch-Phase wird das Produkt kontinuierlich weiterentwickelt. Marketing-Aktivitäten werden hochgefahren und neue Features implementiert.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <script>
+        let openAccordion = null;
+
+        function toggleAccordion(index) {
+            const content = document.getElementById(`content-${index}`);
+            const circle = content.parentElement.querySelector('.step-circle');
+
+            if (openAccordion === index) {
+                content.classList.remove('open');
+                circle.classList.remove('active');
+                openAccordion = null;
+            } else {
+                if (openAccordion !== null) {
+                    document.getElementById(`content-${openAccordion}`).classList.remove('open');
+                    document.querySelector(`#content-${openAccordion}`).parentElement.querySelector('.step-circle').classList.remove('active');
+                }
+                
+                content.classList.add('open');
+                circle.classList.add('active');
+                openAccordion = index;
+            }
+        }
+    </script>
+
+</body>
+</html>
