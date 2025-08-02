@@ -1,9 +1,9 @@
 steps:
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/pear-dev-teamv1/dev-team-pear-agenten:$COMMIT_SHA', '-t', 'gcr.io/pear-dev-teamv1/dev-team-pear-agenten:latest', './pear-backend']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/pear-dev-teamv1/dev-team-pear-agenten:latest', '.']
+
 images:
-  - 'gcr.io/pear-dev-teamv1/dev-team-pear-agenten:$COMMIT_SHA'
-  - 'gcr.io/pear-dev-teamv1/dev-team-pear-agenten:latest'
+- 'gcr.io/pear-dev-teamv1/dev-team-pear-agenten:latest'
+
 options:
   logging: CLOUD_LOGGING_ONLY
-  default_logs_bucket_behavior: REGIONAL_USER_OWNED_BUCKET
