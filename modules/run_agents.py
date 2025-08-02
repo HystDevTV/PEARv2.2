@@ -4,7 +4,7 @@ from pathlib import Path
 import sys
 import threading
 import time
-
+from modules.team import TaskManager
 # ``team.py`` liegt eine Ebene höher im Repository.
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
@@ -12,7 +12,7 @@ from team import build_team
 
 def create_github_issue(title, body):
     GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-    REPO = "HystdevTV/PEARv2"  # z.B. "HystDevTV/PEARv2"
+    REPO = "HystdevTV/PEARv2.2"  
     url = f"https://api.github.com/repos/{REPO}/issues"
     headers = {
         "Authorization": f"token {GITHUB_TOKEN}",
@@ -43,16 +43,23 @@ def agent_worker(agent, team=None):
 
 def run_agents() -> None:
     team = build_team()
+    
+    # 💡 Aufgaben aus GitHub holen & verteilen
+    manager = TaskManager(team)
+    manager.fetch_github_issues()
+    manager.assign_tasks()
+
+    # Jetzt starten die Agenten
     threads = []
     for agent in team:
-        # Dem Projektleiter das ganze Team übergeben, den anderen nicht nötig
         args = (agent, team) if agent.role == "Koordination" else (agent,)
         t = threading.Thread(target=agent_worker, args=args)
         t.start()
         threads.append(t)
     for t in threads:
         t.join()
-    print("Alle Agenten sind fertig!")
 
+    print("Alle Agenten sind fertig!")
+    manager.report(final=True)
 if __name__ == "__main__":
     run_agents()

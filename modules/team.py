@@ -26,7 +26,7 @@ class TaskManager:
             logger.warning("Kein GitHub-Token verfügbar. Issue-Abruf übersprungen.")
             return []
         g = Github(github_token)
-        repo = g.get_repo("HystDevTV/PEARv2")
+        repo = g.get_repo("HystDevTV/PEARv2.2")
         # Optional: Nur ein bestimmtes Issue verarbeiten, falls PEAR_ISSUE_NUMBER gesetzt ist
         issue_number = os.environ.get("PEAR_ISSUE_NUMBER")
         filtered_issues = []
@@ -312,7 +312,7 @@ class Agent:
                 return
             from github import Github
             g = Github(github_token)
-            repo = g.get_repo("HystDevTV/PEARv2")
+            repo = g.get_repo("HystDevTV/PEARv2.2")
             issue = repo.get_issue(number=issue_number)
             comment = f"## Aufgabe abgeschlossen von {self.name}\n\n"
             comment += f"**Status**: erledigt\n\n"
