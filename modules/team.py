@@ -11,61 +11,51 @@ from typing import List, Optional
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("PEAR-Team")
 
+# In team.py (außerhalb der Klasse)
+def extract_tasks_from_issue_body(issue_body: str) -> list[dict]:
+    tasks = []
+    current_category = None
+
+    for line in issue_body.splitlines():
+        line = line.strip()
+        if line.startswith("###"):
+            current_category = line.strip("# ").strip()
+        elif line.startswith("- ") and current_category:
+            task = line[2:].strip()
+            tasks.append({"category": current_category, "task": task})
+
+    return tasks
 # TaskManager für dynamische Aufgabenverteilung und Reporting
 class TaskManager:
     def __init__(self, agents: List['Agent'], db_connector: Optional['DatabaseConnector'] = None):
         self.agents = agents
         self.db_connector = db_connector
-        self.issues = []
+        self.tasks = []
 
     def fetch_github_issues(self):
-        import os
         from github import Github
-        github_token = os.environ.get("GITHUB_TOKEN")
-        if not github_token:
-            logger.warning("Kein GitHub-Token verfügbar. Issue-Abruf übersprungen.")
-            return []
-        g = Github(github_token)
-        repo = g.get_repo("HystDevTV/PEARv2.2")
-        # Optional: Nur ein bestimmtes Issue verarbeiten, falls PEAR_ISSUE_NUMBER gesetzt ist
-        issue_number = os.environ.get("PEAR_ISSUE_NUMBER")
-        filtered_issues = []
-        if issue_number:
-            try:
-                issue = repo.get_issue(int(issue_number))
-                # Prüfe, ob offen und nicht erledigt
-                labels = [label.name for label in getattr(issue, 'labels', [])]
-                if (getattr(issue, 'state', 'open') == 'open') and ("completed-by-agent" not in labels) and not getattr(issue, 'pull_request', False):
-                    filtered_issues.append(issue)
-            except Exception as e:
-                logger.error(f"Fehler beim Abrufen von Issue #{issue_number}: {e}")
-        else:
-            issues = repo.get_issues(state="open")
-            for issue in issues:
-                if getattr(issue, 'pull_request', False):
-                    continue
-                labels = [label.name for label in getattr(issue, 'labels', [])]
-                if "completed-by-agent" not in labels and getattr(issue, 'state', 'open') == 'open':
-                    filtered_issues.append(issue)
-        self.issues = filtered_issues
-        logger.info(f"{len(self.issues)} offene GitHub-Issues ohne 'completed-by-agent' abgerufen.")
-        return self.issues
+        import logging
 
-    def categorize_issue(self, issue):
-        # Einfache Kategorisierung nach Label
-        label_map = {
-            "infrastructure": "Deployment & Infrastruktur",
-            "feature": "API & Datenbank",
-            "frontend": "UI & UX",
-            "ai": "E-Mail- & KI-Verarbeitung",
-            "qa": "Qualitätssicherung",
-            "docs": "Dokumentation",
-            "coordination": "Koordination"
-        }
-        for label in issue.labels:
-            if label.name in label_map:
-                return label_map[label.name]
-        return "Koordination"
+        token = os.getenv("GITHUB_TOKEN")
+        if not token:
+            raise ValueError("GITHUB_TOKEN nicht gefunden")
+
+        g = Github(token)
+        repo = g.get_repo("HystdevTV/PEARv2.2")
+
+        issues = repo.get_issues(state="open")
+        self.tasks = []  # zurücksetzen
+
+        for issue in issues:
+            if "completed-by-agent" not in [l.name for l in issue.labels]:
+                self.tasks.append({
+                    "number": issue.number,
+                    "title": issue.title,
+                    "body": issue.body
+                })
+
+        logging.info(f"{len(self.tasks)} offene GitHub-Issues ohne 'completed-by-agent' abgerufen.")
+
 
     def assign_tasks(self):
         # Vor der Aufgabenverteilung: Aufgabenlisten aller Agenten leeren!
@@ -399,47 +389,95 @@ def build_team(db_connector: Optional[DatabaseConnector] = None) -> List[Agent]:
             db_connector=db_connector
         ),
     ]
+# --- Funktion: Aufgaben aus Issue-Text extrahieren ---
+def extract_tasks_from_issue_body(issue_body: str) -> List[dict]:
+    import re
+    task_pattern = re.compile(r"- \[( |x)\] \*\*(.*?)\*\*: (.+)")
+    tasks = []
+    for match in task_pattern.finditer(issue_body):
+        category, task = match.group(2), match.group(3)
+        tasks.append({"category": category.strip(), "task": task.strip()})
+    return tasks
 
-def print_team(team: List[Agent]) -> None:
-    for agent in team:
-        print(f"{agent.name} ({agent.role})")
-        if agent.backstory:
-            print(f"  Hintergrund: {agent.backstory}")
-        for task in agent.tasks:
-            print(f"  - {task}")
-        print()
+# --- Klasse: TaskManager ---
+class TaskManager:
+    def __init__(self, agents: List['Agent'], db_connector: Optional['DatabaseConnector'] = None):
+        self.agents = agents
+        self.db_connector = db_connector
+        self.tasks = []
 
-def main():
-    db_connector = DatabaseConnector()
-    if not db_connector.connect():
-        logger.error("Datenbankverbindung fehlgeschlagen - System wird ohne DB-Integration gestartet")
-        db_connector = None
-    else:
-        db_connector.create_tables()
-        logger.info("Datenbank erfolgreich initialisiert")
+    def fetch_github_issues(self):
+        from github import Github
+        import logging
+        token = os.getenv("GITHUB_TOKEN")
+        if not token:
+            raise ValueError("GITHUB_TOKEN nicht gefunden")
+        g = Github(token)
+        repo = g.get_repo("HystdevTV/PEARv2.2")
+        self.tasks = []
+        issues = repo.get_issues(state="open")
+        for issue in issues:
+            if "completed-by-agent" not in [l.name for l in issue.labels]:
+                self.tasks.append({
+                    "number": issue.number,
+                    "title": issue.title,
+                    "body": issue.body
+                })
+        logging.info(f"{len(self.tasks)} offene GitHub-Issues ohne 'completed-by-agent' abgerufen.")
 
-    # PL-Agent führt create_issues.py aus (sofern vorhanden)
-    import subprocess
-    import os
-    create_issues_path = os.path.join(os.path.dirname(__file__), '..', 'create_issues.py')
-    if os.path.exists(create_issues_path):
-        logger.info("Projektmanager (PL) führt create_issues.py aus ...")
-        try:
-            result = subprocess.run(['python', create_issues_path], capture_output=True, text=True)
-            logger.info(f"create_issues.py Output:\n{result.stdout}")
-            if result.stderr:
-                logger.warning(f"create_issues.py Fehler:\n{result.stderr}")
-        except Exception as e:
-            logger.error(f"Fehler beim Ausführen von create_issues.py: {e}")
-    else:
-        logger.warning("create_issues.py nicht gefunden – keine neuen Issues erstellt.")
+    def assign_tasks(self):
+        import logging
+        for agent in self.agents:
+            agent.tasks.clear()
+        for issue in self.tasks:
+            parsed = extract_tasks_from_issue_body(issue["body"])
+            for item in parsed:
+                for agent in self.agents:
+                    if item["category"].lower() in agent.role.lower():
+                        agent.tasks.append(item["task"])
+                        break
+        logging.info("Aufgaben dynamisch an Agenten verteilt.")
 
-    team = build_team(db_connector)
-    # TaskManager übernimmt die dynamische Aufgabenverteilung und Ausführung
-    manager = TaskManager(team, db_connector)
-    manager.run()
-    if db_connector:
-        db_connector.close()
+    def print_team(team: List[Agent]) -> None:
+        for agent in team:
+            print(f"{agent.name} ({agent.role})")
+            if agent.backstory:
+                print(f"  Hintergrund: {agent.backstory}")
+            for task in agent.tasks:
+                print(f"  - {task}")
+            print()
 
-if __name__ == "__main__":
-    main()
+    def main():
+        db_connector = DatabaseConnector()
+        if not db_connector.connect():
+            logger.error("Datenbankverbindung fehlgeschlagen - System wird ohne DB-Integration gestartet")
+            db_connector = None
+        else:
+            db_connector.create_tables()
+            logger.info("Datenbank erfolgreich initialisiert")
+
+        # PL-Agent führt create_issues.py aus (sofern vorhanden)
+        import subprocess
+        import os
+        create_issues_path = os.path.join(os.path.dirname(__file__), '..', 'create_issues.py')
+        if os.path.exists(create_issues_path):
+            logger.info("Projektmanager (PL) führt create_issues.py aus ...")
+            try:
+                result = subprocess.run(['python', create_issues_path], capture_output=True, text=True)
+                logger.info(f"create_issues.py Output:\n{result.stdout}")
+                if result.stderr:
+                    logger.warning(f"create_issues.py Fehler:\n{result.stderr}")
+            except Exception as e:
+                logger.error(f"Fehler beim Ausführen von create_issues.py: {e}")
+        else:
+            logger.warning("create_issues.py nicht gefunden – keine neuen Issues erstellt.")
+
+        team = build_team(db_connector)
+        # TaskManager übernimmt die dynamische Aufgabenverteilung und Ausführung
+        manager = TaskManager(team, db_connector)
+        manager.run()
+        if db_connector:
+            db_connector.close()
+
+    if __name__ == "__main__":
+        main()

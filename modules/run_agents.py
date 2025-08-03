@@ -1,18 +1,19 @@
 import os
 import requests
-from pathlib import Path
 import sys
-import threading
 import time
-from modules.team import TaskManager
-# ``team.py`` liegt eine Ebene höher im Repository.
-sys.path.append(str(Path(__file__).resolve().parent.parent))
+import threading
+from pathlib import Path
+from dotenv import load_dotenv
 
-from team import build_team
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+load_dotenv()
+
+from team import build_team, TaskManager, extract_tasks_from_issue_body
 
 def create_github_issue(title, body):
     GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-    REPO = "HystdevTV/PEARv2.2"  
+    REPO = "HystdevTV/PEARv2.2"
     url = f"https://api.github.com/repos/{REPO}/issues"
     headers = {
         "Authorization": f"token {GITHUB_TOKEN}",
@@ -25,31 +26,44 @@ def create_github_issue(title, body):
 
 def agent_worker(agent, team=None):
     print(f"{agent.name} startet Aufgabenbearbeitung...")
+
     if agent.role == "Koordination" and team is not None:
-        # Automatisierung: Für jede Aufgabe der anderen Agenten ein Issue anlegen
-        for other in team:
-            if other is agent:
-                continue
-            for task in other.tasks:
-                issue_title = f"{other.role}: {task}"
-                issue_body = f"Automatisch erstellt durch den Projektmanager für {other.name} ({other.role})"
-                create_github_issue(issue_title, issue_body)
-                time.sleep(0.5)  # Optional: kleine Pause zwischen den Requests
+        for task_issue in agent.tasks:
+            parsed_tasks = extract_tasks_from_issue_body(task_issue["body"])
+
+            for task_data in parsed_tasks:
+                category = task_data["category"]
+                task_text = task_data["task"]
+
+                assigned = False
+                for member in team:
+                    if member is agent:
+                        continue
+                    if category.lower() in member.role.lower():
+                        create_github_issue(
+                            title=f"{member.role}: {task_text}",
+                            body=f"Vom PL zugewiesen für {member.name} ({member.role})\n\n{task_text}"
+                        )
+                        member.tasks.append(task_text)
+                        assigned = True
+                        break
+
+                if not assigned:
+                    print(f"⚠️ Keine passende Rolle für: '{category}' → '{task_text}'")
     else:
         for task in agent.tasks:
-            print(f"{agent.name} erledigt: {task}")
-            time.sleep(1)
-    print(f"{agent.name} hat alle Aufgaben erledigt.\n")
+            agent.execute_task(task, category=agent.role, priority=1)
+            time.sleep(0.5)
 
-def run_agents() -> None:
+        print(f"{agent.name} hat alle Aufgaben erledigt.\n")
+        agent.report()
+
+def run_agents():
     team = build_team()
-    
-    # 💡 Aufgaben aus GitHub holen & verteilen
     manager = TaskManager(team)
     manager.fetch_github_issues()
     manager.assign_tasks()
 
-    # Jetzt starten die Agenten
     threads = []
     for agent in team:
         args = (agent, team) if agent.role == "Koordination" else (agent,)
@@ -61,5 +75,6 @@ def run_agents() -> None:
 
     print("Alle Agenten sind fertig!")
     manager.report(final=True)
+
 if __name__ == "__main__":
     run_agents()

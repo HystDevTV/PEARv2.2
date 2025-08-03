@@ -90,3 +90,120 @@ Der Projektmanager (Projektleiter) soll dabei automatisch für alle Aufgaben der
 **Status:**  
 Automatisierte Aufgabenverteilung und Issue-Erstellung durch den Projektmanager erfolgreich umgesetzt.  
 **Nächste Schritte:** Weitere Automatisierung der Agenten-Aufgaben (z. B. Code-Generierung, Cloud-Setup).
+
+# 📘 Projektdokumentation: PEARv2.2 Agenten-Taskmanagement
+
+## 📌 Ziel
+Ein intelligentes Multi-Agenten-System zur automatisierten Abarbeitung von GitHub-Issues durch spezialisierte Agenten. Der Projektleiter (PL) analysiert zentrale Aufgaben-Issues, verteilt Aufgaben automatisch an zuständige Teammitglieder, und jeder Agent dokumentiert seinen Fortschritt in Echtzeit.
+
+## 🧱 Architekturüberblick
+
+```txt
+PEARv2.2/
+│
+├── modules/
+│   ├── team.py            # Enthält Agentendefinitionen, TaskManager und Logik zur Teamerstellung
+│   ├── run_agents.py      # Steuerungsskript: Ruft Issues ab, verteilt Aufgaben, startet Agentenausführung
+│
+├── create_issues.py       # Optionales Skript zum automatischen Anlegen von GitHub-Issues
+├── .env                   # Enthält GITHUB_TOKEN zur Authentifizierung der GitHub-API
+├── requirements.txt       # (z. B.) PyGithub, python-dotenv, etc.
+```
+
+## ⚙️ Setup
+
+### 1. `.env`-Datei erstellen:
+```env
+GITHUB_TOKEN=ghp_deinTokenHierEinfügen
+```
+
+### 2. Notwendige Abhängigkeiten installieren:
+```bash
+pip install PyGithub python-dotenv
+```
+
+## 👥 Agentenstruktur
+
+Jeder Agent ist eine Instanz der `Agent`-Klasse. Die Rollen sind z. B.:
+- Projektmanager (Koordination)
+- Backend-Entwickler (API & Datenbank)
+- Frontend-Entwickler (UI & UX)
+- CloudIA (Cloud & GCP-Expertin)
+- QA/Testing-Spezialist
+- uvm.
+
+Die Agenten werden in `build_team()` in `team.py` initialisiert.
+
+## 🔄 TaskManager: Aufgabenlogik
+
+### Klasse: `TaskManager`
+Verantwortlich für:
+- Abrufen offener GitHub-Issues
+- Extrahieren und Zuweisen der Aufgaben (basierend auf Rollenschlüsselwörtern)
+- Reporting nach Abarbeitung
+
+```python
+manager = TaskManager(team)
+manager.fetch_github_issues()
+manager.assign_tasks()
+```
+
+### 📥 `fetch_github_issues()`
+- Holt alle offenen Issues aus dem GitHub-Repo
+- Filtert jene ohne das Label `completed-by-agent`
+
+### 🧠 `assign_tasks()`
+- Verarbeitet `body` der Issues (Markdown-Format)
+- Extrahiert Aufgaben & Kategorie mit `extract_tasks_from_issue_body()`
+- Weist Aufgaben passenden Agenten zu
+
+## 🧪 Beispiel-Aufgaben-Format in GitHub-Issues:
+
+```md
+## Aufgabenliste für den Sprint:
+
+- [Backend] Neue API-Endpunkte für Nutzerstatistik
+- [Frontend] Verbesserte UI für Dashboard
+- [Cloud] Deployment auf Cloud Run automatisieren
+```
+
+## 🚀 Ablauf (`run_agents.py`)
+
+```python
+team = build_team()
+manager = TaskManager(team)
+manager.fetch_github_issues()
+manager.assign_tasks()
+```
+
+- PL analysiert zentrale Issues, extrahiert Aufgaben, verteilt via `create_github_issue()`
+- Alle Agenten rufen ihre `tasks` ab und führen sie aus via `agent.execute_task()`
+- Ergebnisse werden geloggt und ggf. kommentiert oder mit Labels versehen
+
+## 📊 Reporting
+
+### 🧾 Beispielausgabe nach erfolgreicher Ausführung:
+
+```txt
+2025-08-03 02:07:27,980 - INFO - Projektmanager: 1 Aufgaben zugewiesen, 1 erledigt.
+2025-08-03 02:07:27,981 - INFO - Backend-Entwickler: 1 Aufgaben zugewiesen, 1 erledigt.
+...
+```
+
+## 🧼 Fehlerquellen & Tipps
+
+- 🔐 **Token nicht gesetzt**: `.env` vergessen?
+- 🧠 **Keine Aufgaben erkannt**: Format der Aufgabenliste prüfen
+- 🕳️ **Agent hat keine passende Rolle**: Kategorie stimmt nicht mit Agentenrolle überein
+- 🔄 **Kein Output?** Logging-Level prüfen oder `agent.report()` fehlt
+
+## ✅ Status
+
+| Komponente           | Implementiert | Getestet |
+|----------------------|---------------|----------|
+| Agentenmodellierung      | ✅            | ✅       |
+| GitHub-Issue-Import      | ✅            | ✅       |
+| Automatisierte Zuweisung | ✅            | ✅       |
+| Abarbeitung durch Agents | ✅            | ✅       |
+| Rückmeldung an GitHub    | 🔜     | 🔜       |
+  (Label + Kommentar)
