@@ -23,14 +23,16 @@ steps:
       - '--image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:${COMMIT_SHA}'
       - '--region=${_REGION}'
       - '--platform=managed'
-      - '--allow-unauthenticated' # Wichtig, damit der Storage-Trigger den Dienst aufrufen kann
-      - '--set-env-vars=FASTAPI_API_URL=${_FASTAPI_URL}' # Übergibt die URL Ihrer VM als Umgebungsvariable
+      - '--allow-unauthenticated'
+      - '--set-env-vars=FASTAPI_API_URL=${_FASTAPI_URL}'
 
-# Variablen, die im Build-Prozess verwendet werden. Können bei Bedarf angepasst werden.
+# Variablen, die im Build-Prozess verwendet werden.
 substitutions:
   _SERVICE_NAME: 'pear-email-processor'
-  _REPO_NAME: 'pear-main-repo' # Der Name für Ihr Artifact Registry Repository
+  _REPO_NAME: 'pear-images'
   _REGION: 'us-central1'
-  # WICHTIG: Stellen Sie sicher, dass dies die korrekte, aktuelle externe IP der VM ist,
-  # auf der Ihre backend_app.py läuft.
   _FASTAPI_URL: 'http://35.206.123.242:8000'
+
+# NEU: Explizite Logging-Konfiguration hinzufügen
+options:
+  logging: CLOUD_LOGGING_ONLY
