@@ -288,3 +288,57 @@ manager.assign_tasks()
 | Abarbeitung durch Agents | ✅            | ✅       |
 | Rückmeldung an GitHub    | 🔜     | 🔜       |
   (Label + Kommentar)
+
+  7. 🚀 Inbetriebnahme des Agenten-Systems (07.08.2025)
+Dieser Abschnitt dokumentiert den Weg von den ersten Code-Anpassungen bis zum voll funktionsfähigen Prototyp des PEAR-Dev-TeamV1-Moduls. Er dient als Blaupause, um den Prozess bei Bedarf nachzuvollziehen.
+
+7.1. 🎯 Phase 1: Die Ausgangslage – Refactoring der Code-Basis
+Der Prozess begann mit einem umfassenden Refactoring der Skripte run_agents.py und team.py, um eine saubere und wartbare Architektur zu schaffen (NF-WF-001).
+
+Ziel: Klare Trennung der Verantwortlichkeiten.
+
+team.py: Definiert die Agenten, ihre Fähigkeiten und die zentrale Logik zur Aufgabenverwaltung (TaskManager).
+
+run_agents.py: Dient ausschließlich als Orchestrator, der die Threads startet und den Gesamtprozess steuert.
+
+Sicherheitsverbesserung: Die DatabaseConnector-Klasse wurde so angepasst, dass sie Datenbank-Zugangsdaten zwingend aus Umgebungsvariablen (.env-Datei) erwartet, um das Hardcoding von Passwörtern zu vermeiden.
+
+7.2. 🛠️ Phase 2: Die Debugging-Reise – Fehleranalyse und Lösungsfindung
+Bei der Inbetriebnahme traten mehrere, aufeinanderfolgende Fehler auf, die systematisch identifiziert und gelöst wurden.
+
+AttributeError & SyntaxError
+🔴 Problem: Methoden-Umbenennungen aus dem Refactoring wurden nicht überall übernommen. Zusätzlich wurde versehentlich Text aus der Konversation in die .py-Dateien kopiert, was zu ungültigem Python-Code führte.
+
+🟢 Lösung: Vereinheitlichung aller Methodenaufrufe und sorgfältige Bereinigung der Skript-Dateien.
+
+GitHub API Error: 404 Not Found
+🔴 Problem: Das Skript suchte im falschen Repository (HystDevTV/PEARv2) nach Aufgaben.
+
+🟢 Lösung: Korrektur des hartcodierten Repository-Namens auf HystDevTV/PEARv2.2 an allen relevanten Stellen in team.py.
+
+Fehlerhafte Aufgaben-Zuweisung
+🔴 Problem: Eine zu stark vereinfachte Logik analysierte nur noch den Issue-Titel. Die Anforderung, alle Aufgaben aus dem Inhalt eines einzigen Master-Tickets zu lesen, wurde nicht erfüllt.
+
+🟢 Lösung: Komplette Überarbeitung der assign_tasks-Methode. Sie analysiert nun den Body eines Issues und nutzt eine robuste Normalisierungsfunktion, um auch Rollen mit Sonderzeichen (&, -) sicher zu erkennen.
+
+IndentationError
+🔴 Problem: Eine neu eingeführte, verschachtelte Hilfsfunktion war beim Kopieren falsch eingerückt worden, was zu einem Syntaxfehler führte.
+
+🟢 Lösung: Korrektur der Einrückungen, um die Python-Syntax zu erfüllen und die Lesbarkeit zu verbessern.
+
+
+
+7.3. ✨ Phase 3: Meilenstein – Der funktionale Prototyp ist LIVE!
+Nach einem intensiven Debugging-Zyklus wurde ein erfolgreicher End-to-End-Test durchgeführt, der die volle Funktionsfähigkeit des Systems bestätigt.
+
+✅ Intelligente Aufgabenverteilung: Alle Teilaufgaben aus dem Master-Ticket wurden fehlerfrei erkannt und den korrekten Spezialisten-Agenten zugewiesen.
+
+✅ Echte Fähigkeiten: Die Agenten sind aus dem Dummy-Modus erwacht und haben erfolgreich reale Datei-Schreiboperationen durchgeführt.
+
+✅ Parallele Abarbeitung: Alle Agenten haben gleichzeitig und ohne Konflikte gearbeitet.
+
+.
+
+✅ End-to-End-Funktionalität: Der gesamte Workflow – von der Aufgabenstellung in einem GitHub-Issue über die Ausführung bis zum greifbaren Ergebnis – funktioniert nahtlos.
+
+Das PEAR-Dev-TeamV1-System hat damit den Status eines funktionalen Prototyps erreicht.
