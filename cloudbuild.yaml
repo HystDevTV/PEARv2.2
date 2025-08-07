@@ -1,5 +1,5 @@
 steps:
-  # Schritt 1: Docker-Image aus dem Unterordner bauen und für die Artifact Registry taggen
+  # Schritt 1: Docker-Image bauen und mit beiden Tags versehen
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
@@ -7,13 +7,16 @@ steps:
       - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:${COMMIT_SHA}'
       - '-t'
       - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:latest'
-      - './pear-email-processor-function' # Der Ordner, der den Code enthält
+      - './pear-email-processor-function'
 
-  # Schritt 2: Das gebaute Image in die Artifact Registry hochladen
+  # Schritt 2: BEIDE Docker-Image-Tags in die Artifact Registry hochladen
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:latest']
+  
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:${COMMIT_SHA}'] # <-- DIESER SCHRITT HAT GEFEHLT
 
-  # Schritt 3: Das neue Image automatisch auf Cloud Run bereitstellen
+  # Schritt 3: Das neue Image auf Cloud Run bereitstellen
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
@@ -26,13 +29,11 @@ steps:
       - '--allow-unauthenticated'
       - '--set-env-vars=FASTAPI_API_URL=${_FASTAPI_URL}'
 
-# Variablen, die im Build-Prozess verwendet werden....
 substitutions:
   _SERVICE_NAME: 'pear-email-processor'
   _REPO_NAME: 'pear-images'
   _REGION: 'us-central1'
   _FASTAPI_URL: 'http://35.206.123.242:8000'
 
-# NEU: Explizite Logging-Konfiguration hinzufügen
 options:
   logging: CLOUD_LOGGING_ONLY
