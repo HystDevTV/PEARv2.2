@@ -1,5 +1,5 @@
 fastapi
 uvicorn
-pydantic
+pydantic[email]
 passlib[bcrypt]
 mysql-connector-python
