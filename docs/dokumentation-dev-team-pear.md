@@ -41,7 +41,88 @@ Der Projektmanager (Projektleiter) soll dabei automatisch für alle Aufgaben der
 - Der Zugriff erfolgt über ein persönliches Zugriffstoken (`GITHUB_TOKEN`), das als Umgebungsvariable gesetzt sein muss.
 - Die Issues werden mit Titel und Beschreibung automatisch angelegt.
 
+## 📘 Aufgabenverteilung über GitHub-Issues
+
+Um eine automatisierte Bearbeitung durch den Projektleiter (PL) und die KI-Agenten zu ermöglichen, müssen Aufgaben als GitHub-Issues** verfasst werden dies können auch mehrere Tasks für verschiedene Agenten in einem Issue verfasst werden. Wichtig ist dabei folgende Formatierung:
+
+## Anleitung: Aufgabenverteilung über ein zentrales Master-Ticket
+Um die Arbeit für das Team zu organisieren, verwenden wir ein zentrales "Master-Ticket" auf GitHub. Das Agenten-System liest den Inhalt (Body) dieses einen Tickets und verteilt alle darin enthaltenen Aufgaben automatisch an die zuständigen Spezialisten.
+
+## Das Grundprinzip
+Der Titel des Tickets ist für uns Menschen. Die Maschine interessiert sich nur für den Inhalt des Tickets. Jede Aufgabe muss dort in einem speziellen Format auf einer eigenen Zeile stehen.
+
+Die magische Formel lautet: [Rolle des Agenten]: Genaue Beschreibung der Aufgabe
+
+Schritt 1: Das Master-Ticket erstellen
+Gehen Sie zum GitHub-Repository HystDevTV/PEARv2.2.
+
+Klicken Sie auf den Tab "Issues".
+
+Klicken Sie auf den grünen Button "New issue".
+
+Geben Sie dem Issue einen Titel, der für Menschen verständlich ist, z.B.:
+
+Heutige Aufgaben 07.08.2025
+
+Aufgaben für Sprint-Woche 32
+
+Offene Punkte für Feature X
+
+Schritt 2: Aufgaben im Ticket-Inhalt formatieren (Der wichtigste Schritt!)
+Kopieren Sie die folgenden Aufgaben-Beispiele in das große Textfeld ("Leave a comment") und passen Sie sie an Ihre Bedürfnisse an.
+
+Wichtig: Jede Aufgabe muss auf einer neuen Zeile stehen und mit einer der folgenden Rollen beginnen:
+
+Um diesen Agenten zu beauftragen:	Verwenden Sie diese Rolle:
+Backend-Entwickler	[API & Datenbank]
+DevOps-Engineer	[Deployment & Infrastruktur]
+Dokumentations-Agent	[Dokumentation]
+CloudIA	[Cloud & GCP-Expertin]
+Frontend-Entwickler	[UI & UX]
+Projektmanager	[Koordination]
+
+
+Beispiel für den Ticket-Inhalt:
+Markdown
+
+Hallo Team,
+
+hier sind die Aufgaben für heute:
+
+[API & Datenbank]: Den neuen Endpunkt /api/clients für die Kundenliste implementieren.
+[Deployment & Infrastruktur]: Die neue Version des Agenten-Systems automatisch auf Cloud Run deployen.
+[Dokumentation]: Die Anleitung für das Issue-Format fertigstellen und in die README aufnehmen.
+[UI & UX]: Die Ladeanimation auf der Login-Seite einfügen.
+[Cloud & GCP-Expertin]: Ein Konzept für die automatische Skalierung der Datenbank erstellen.
+
+Danke & let's ship it! 🚀
+Schritt 3: Ticket speichern und System starten
+Klicken Sie auf "Submit new issue", um das Master-Ticket zu speichern.
+
+Stellen Sie sicher, dass das Ticket kein completed-by-agent Label hat.
+
+Führen Sie das run_agents.py-Skript aus.
+
+Das System wird das Ticket finden, die 5 Aufgaben aus dem Inhalt lesen und sie an die richtigen 5 Agenten verteilen.
+
+### 🔄 Vorgehensweise für den Projektleiter
+
+1. **Jede Teilaufgabe** (z. B. aus einem Master-Issue mit Checkliste) wird in ein eigenes GitHub-Issue nach obigem Format übertragen.
+2. Die **Kategorie** bestimmt automatisch den zuständigen Agenten.
+3. Die Agenten erhalten ihre Aufgaben beim Start über `TaskManager.assign_tasks()`.
+4. Die Bearbeitung erfolgt durch `agent.execute_task(...)`.
+5. Nach erfolgreichem Abschluss wird das Issue automatisch:
+   - kommentiert
+   - mit `completed-by-agent` gelabelt
+
 ---
+
+### ⛔ Hinweise
+| Punkt | Bedeutung |
+|-------|-----------|
+| **Kategorie** | Muss exakt mit einer Agentenrolle in `team.py` übereinstimmen. |
+| **Keine Checkboxes** | Nur echte Einzel-Issues im beschriebenen Format werden verarbeitet. |
+| **Label** | `completed-by-agent` wird vom System gesetzt. Nur Issues **ohne dieses Label** werden verteilt. |
 
 ## 4. Ausführung
 

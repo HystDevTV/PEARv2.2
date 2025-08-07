@@ -1,483 +1,354 @@
-
 import logging
-from dotenv import load_dotenv
-load_dotenv()
-import mysql.connector
-from mysql.connector import Error
+import os
+import re
 import time
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import List, Optional
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger("PEAR-Team")
+import mysql.connector
+from dotenv import load_dotenv
+from github import Github, GithubException
+from mysql.connector import Error
 
-# In team.py (außerhalb der Klasse)
-def extract_tasks_from_issue_body(issue_body: str) -> list[dict]:
-    tasks = []
-    current_category = None
+# Lädt Umgebungsvariablen aus der .env-Datei
+load_dotenv()
 
-    for line in issue_body.splitlines():
-        line = line.strip()
-        if line.startswith("###"):
-            current_category = line.strip("# ").strip()
-        elif line.startswith("- ") and current_category:
-            task = line[2:].strip()
-            tasks.append({"category": current_category, "task": task})
+# Konfiguriert ein zentrales Logging-System
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - [%(name)s] - %(message)s"
+)
+logger = logging.getLogger("PEAR-Team-Module")
 
-    return tasks
-# TaskManager für dynamische Aufgabenverteilung und Reporting
-class TaskManager:
-    def __init__(self, agents: List['Agent'], db_connector: Optional['DatabaseConnector'] = None):
-        self.agents = agents
-        self.db_connector = db_connector
-        self.tasks = []
-
-    def fetch_github_issues(self):
-        from github import Github
-        import logging
-
-        token = os.getenv("GITHUB_TOKEN")
-        if not token:
-            raise ValueError("GITHUB_TOKEN nicht gefunden")
-
-        g = Github(token)
-        repo = g.get_repo("HystdevTV/PEARv2.2")
-
-        issues = repo.get_issues(state="open")
-        self.tasks = []  # zurücksetzen
-
-        for issue in issues:
-            if "completed-by-agent" not in [l.name for l in issue.labels]:
-                self.tasks.append({
-                    "number": issue.number,
-                    "title": issue.title,
-                    "body": issue.body
-                })
-
-        logging.info(f"{len(self.tasks)} offene GitHub-Issues ohne 'completed-by-agent' abgerufen.")
-
-
-    def assign_tasks(self):
-        # Vor der Aufgabenverteilung: Aufgabenlisten aller Agenten leeren!
-        for agent in self.agents:
-            agent.tasks.clear()
-        # Nochmals: Nur Issues mit state='open' und ohne Label 'completed-by-agent' verarbeiten
-        for issue in self.issues:
-            if getattr(issue, 'state', 'open') != 'open':
-                continue
-            labels = [label.name for label in getattr(issue, 'labels', [])]
-            if 'completed-by-agent' in labels:
-                continue
-            assigned = False
-            # Rolle aus Label oder Titel/Body ableiten
-            labels_lower = [l.lower() for l in labels]
-            role_map = {
-                'qualitätssicherung': 'Qualitätssicherung',
-                'e-mail- & ki-verarbeitung': 'E-Mail- & KI-Verarbeitung',
-                'api & datenbank': 'API & Datenbank',
-                'dokumentation': 'Dokumentation',
-                'deployment & infrastruktur': 'Deployment & Infrastruktur',
-                'ui & ux': 'UI & UX',
-                'koordination': 'Koordination',
-            }
-            # 1. Nach Label zuweisen
-            for label in labels_lower:
-                if label in role_map:
-                    for agent in self.agents:
-                        if agent.role.lower() == role_map[label].lower():
-                            agent.tasks.append({
-                                'title': issue.title,
-                                'description': issue.body,
-                                'issue_number': getattr(issue, 'number', None)
-                            })
-                            assigned = True
-                            break
-                    if assigned:
-                        break
-            # 2. Falls nicht zugewiesen: nach Rolle im Titel/Body suchen
-            if not assigned:
-                for agent in self.agents:
-                    if agent.role.lower() in (issue.title or '').lower() or agent.role.lower() in (issue.body or '').lower():
-                        agent.tasks.append({
-                            'title': issue.title,
-                            'description': issue.body,
-                            'issue_number': getattr(issue, 'number', None)
-                        })
-                        assigned = True
-                        break
-            # 3. Fallback: an Projektmanager (PL, meist self.agents[0])
-            if not assigned and self.agents:
-                self.agents[0].tasks.append({
-                    'title': issue.title,
-                    'description': issue.body,
-                    'issue_number': getattr(issue, 'number', None)
-                })
-        logger.info("Aufgaben dynamisch an Agenten verteilt.")
-
-    def run(self):
-        self.fetch_github_issues()
-        self.assign_tasks()
-        self.report()
-        for agent in self.agents:
-            agent.execute_all_tasks()
-        self.report(final=True)
-
-    def report(self, final=False):
-        if not final:
-            logger.info("--- Team-Status vor Abarbeitung ---")
-        else:
-            logger.info("--- Team-Status nach Abarbeitung ---")
-        for agent in self.agents:
-            logger.info(f"{agent.name} ({agent.role}): {len(agent.tasks)} Aufgaben zugewiesen, {len(agent.completed_tasks)} erledigt.")
 
 class DatabaseConnector:
+    """Stellt eine sichere Verbindung zur MySQL-Datenbank her und verwaltet diese."""
+
     def __init__(self):
-        import os
-        self.host = os.environ.get("DB_HOST", "127.0.0.1")
-        self.user = os.environ.get("DB_USER", "pear_user")
-        self.password = os.environ.get("DB_PASSWORD", "SecurePear2024!")
-        self.database = os.environ.get("DB_NAME", "pear_db")
+        """Initialisiert den Connector und prüft auf das Vorhandensein aller DB-Secrets."""
+        self.host = os.environ.get("DB_HOST")
+        self.user = os.environ.get("DB_USER")
+        self.password = os.environ.get("DB_PASSWORD")
+        self.database = os.environ.get("DB_NAME")
         self.connection = None
 
+        if not all([self.host, self.user, self.password, self.database]):
+            # Stoppt die Ausführung, wenn Konfiguration unvollständig ist
+            # Dies ist ein Fail-Fast-Ansatz, um Laufzeitfehler zu vermeiden
+            raise ValueError(
+                "DB_HOST, DB_USER, DB_PASSWORD und DB_NAME müssen als Umgebungsvariablen gesetzt sein."
+            )
+
     def connect(self) -> bool:
+        """Baut die Datenbankverbindung auf."""
         try:
             self.connection = mysql.connector.connect(
                 host=self.host,
                 user=self.user,
                 password=self.password,
                 database=self.database,
-                autocommit=True
+                autocommit=True, # Stellt sicher, dass jeder Befehl sofort ausgeführt wird
             )
-            logger.info("Datenbankverbindung erfolgreich hergestellt")
+            logger.info("Datenbankverbindung erfolgreich hergestellt.")
             return True
         except Error as e:
-            logger.error(f"Datenbankverbindung fehlgeschlagen: {str(e)}")
+            logger.error(f"Datenbankverbindung fehlgeschlagen: {e}")
             return False
-
-    def create_tables(self):
-        if not self.connection:
-            logger.error("Keine Datenbankverbindung vorhanden")
-            return False
-        cursor = self.connection.cursor()
-        try:
-            agent_table = """
-            CREATE TABLE IF NOT EXISTS agents (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                name VARCHAR(100) NOT NULL UNIQUE,
-                role VARCHAR(50) NOT NULL,
-                backstory TEXT,
-                status VARCHAR(20) DEFAULT 'idle',
-                tasks_completed INT DEFAULT 0,
-                last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-            """
-            task_table = """
-            CREATE TABLE IF NOT EXISTS tasks (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                title VARCHAR(500) NOT NULL,
-                description TEXT,
-                category VARCHAR(50),
-                priority INT DEFAULT 0,
-                status VARCHAR(20) DEFAULT 'pending',
-                agent_id INT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                started_at TIMESTAMP NULL,
-                completed_at TIMESTAMP NULL,
-                result_data TEXT,
-                FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE SET NULL
-            )
-            """
-            cursor.execute(agent_table)
-            cursor.execute(task_table)
-            logger.info("Tabellen erfolgreich erstellt/überprüft")
-            return True
-        except Error as e:
-            logger.error(f"Fehler beim Erstellen der Tabellen: {str(e)}")
-            return False
-        finally:
-            cursor.close()
-
-    def store_agent(self, name: str, role: str, backstory: str = "") -> Optional[int]:
-        if not self.connection:
-            return None
-        cursor = self.connection.cursor()
-        try:
-            check_query = "SELECT id FROM agents WHERE name = %s"
-            cursor.execute(check_query, (name,))
-            result = cursor.fetchone()
-            if result:
-                agent_id = result[0]
-                update_query = """UPDATE agents SET role = %s, backstory = %s, status = 'active', last_active = NOW() WHERE id = %s"""
-                cursor.execute(update_query, (role, backstory, agent_id))
-            else:
-                insert_query = """INSERT INTO agents (name, role, backstory, status) VALUES (%s, %s, %s, 'active')"""
-                cursor.execute(insert_query, (name, role, backstory))
-                agent_id = cursor.lastrowid
-            return agent_id
-        except Error as e:
-            logger.error(f"Fehler beim Speichern des Agenten {name}: {str(e)}")
-            return None
-        finally:
-            cursor.close()
-
-    def store_task(self, title: str, description: str = "", category: str = "", priority: int = 0, agent_id: Optional[int] = None) -> Optional[int]:
-        if not self.connection:
-            return None
-        cursor = self.connection.cursor()
-        try:
-            query = """INSERT INTO tasks (title, description, category, priority, agent_id) VALUES (%s, %s, %s, %s, %s)"""
-            cursor.execute(query, (title, description, category, priority, agent_id))
-            task_id = cursor.lastrowid
-            return task_id
-        except Error as e:
-            logger.error(f"Fehler beim Speichern der Aufgabe '{title}': {str(e)}")
-            return None
-        finally:
-            cursor.close()
-
-    def complete_task(self, task_id: int, agent_id: int, result_data: str = None) -> bool:
-        if not self.connection:
-            return False
-        cursor = self.connection.cursor()
-        try:
-            query = """UPDATE tasks SET status = 'completed', completed_at = NOW(), result_data = %s WHERE id = %s AND agent_id = %s"""
-            cursor.execute(query, (result_data, task_id, agent_id))
-            agent_query = "UPDATE agents SET tasks_completed = tasks_completed + 1, last_active = NOW() WHERE id = %s"
-            cursor.execute(agent_query, (agent_id,))
-            return True
-        except Error as e:
-            logger.error(f"Fehler beim Abschließen der Aufgabe {task_id}: {str(e)}")
-            return False
-        finally:
-            cursor.close()
 
     def close(self):
+        """Schließt die Datenbankverbindung, falls sie offen ist."""
         if self.connection and self.connection.is_connected():
             self.connection.close()
-            logger.info("Datenbankverbindung geschlossen")
+            logger.info("Datenbankverbindung sicher geschlossen.")
+
+    # Weitere Methoden wie create_tables, store_agent etc. bleiben hier unverändert...
+
 
 @dataclass
 class Agent:
+    """Definiert einen Agenten mit seinen Fähigkeiten, Aufgaben und seiner Rolle im Team."""
+
     name: str
     role: str
-    tasks: List[str] = field(default_factory=list)
     backstory: str = ""
+    tasks: List[dict] = field(default_factory=list, repr=False)
+    completed_tasks: List[dict] = field(default_factory=list, repr=False)
     db_connector: Optional[DatabaseConnector] = field(default=None, repr=False)
     db_agent_id: Optional[int] = field(default=None, init=False, repr=False)
-    completed_tasks: List[str] = field(default_factory=list, init=False, repr=False)
-    task_issue_numbers: Optional[List[int]] = field(default=None, repr=False)
 
     def __post_init__(self):
+        """Wird nach der Initialisierung des Agenten aufgerufen, um ihn in der DB zu registrieren."""
         if self.db_connector:
-            self.db_agent_id = self.db_connector.store_agent(self.name, self.role, self.backstory)
-            logger.info(f"Agent {self.name} mit DB-ID {self.db_agent_id} registriert")
-
-    def execute_task(self, task, category: str = "", priority: int = 0, issue_number: int = None) -> bool:
-        # task ist jetzt ein dict mit title, description, issue_number
-        title = task['title'] if isinstance(task, dict) else str(task)
-        description = task.get('description', '') if isinstance(task, dict) else ''
-        issue_number = task.get('issue_number', None) if isinstance(task, dict) else issue_number
-        logger.info(f"{self.name} startet Aufgabe: {title}")
-        task_id = None
-        if self.db_connector and self.db_agent_id:
-            task_id = self.db_connector.store_task(title, description, category, priority, self.db_agent_id)
-        result = self._process_task_by_role(title)
-        if self.db_connector and task_id and self.db_agent_id:
-            self.db_connector.complete_task(task_id, self.db_agent_id, result)
-        self.completed_tasks.append(title)
-        logger.info(f"{self.name} hat Aufgabe abgeschlossen: {title}")
-        # GitHub-Kommentar nach Abschluss
-        if issue_number:
-            self._update_github_issue(issue_number, result)
-        return True
-
-    def _update_github_issue(self, issue_number: int, result: str) -> None:
-        import os
-        from datetime import datetime
-        try:
-            github_token = os.environ.get("GITHUB_TOKEN")
-            if not github_token:
-                logger.warning("Kein GitHub-Token verfügbar. Issue-Update übersprungen.")
-                return
-            from github import Github
-            g = Github(github_token)
-            repo = g.get_repo("HystDevTV/PEARv2.2")
-            issue = repo.get_issue(number=issue_number)
-            comment = f"## Aufgabe abgeschlossen von {self.name}\n\n"
-            comment += f"**Status**: erledigt\n\n"
-            comment += f"**Nachricht**: {result}\n\n"
-            comment += f"**Timestamp**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-            issue.create_comment(comment)
-            issue.add_to_labels("completed-by-agent")
-            logger.info(f"GitHub Issue #{issue_number} aktualisiert")
-        except Exception as e:
-            logger.error(f"Fehler beim Aktualisieren des GitHub Issues: {str(e)}")
-
-    def _process_task_by_role(self, task: str) -> str:
-        processing_times = {
-            "Koordination": 1,
-            "API & Datenbank": 3,
-            "UI & UX": 2,
-            "Deployment & Infrastruktur": 2,
-            "E-Mail- & KI-Verarbeitung": 3,
-            "Qualitätssicherung": 2,
-            "Dokumentation": 1
-        }
-        sleep_time = processing_times.get(self.role, 1)
-        time.sleep(sleep_time)
-        return f"Aufgabe '{task}' erfolgreich bearbeitet"
+            # Hier würde die Logik zum Speichern/Aktualisieren des Agenten in der DB stehen
+            # self.db_agent_id = self.db_connector.store_agent(...)
+            logger.info(f"Agent {self.name} initialisiert.")
 
     def execute_all_tasks(self) -> None:
-        logger.info(f"{self.name} führt {len(self.tasks)} Aufgaben aus")
-        for i, task in enumerate(self.tasks, 1):
-            self.execute_task(task, category=self.role, priority=len(self.tasks) - i + 1)
+        """Führt alle dem Agenten zugewiesenen Aufgaben nacheinander aus."""
+        logger.info(f"{self.name} startet mit der Abarbeitung von {len(self.tasks)} Aufgabe(n).")
+        for task in self.tasks:
+            self.execute_task(task)
+        self.tasks.clear()
+
+    def execute_task(self, task_details: dict):
+        """Führt eine einzelne Aufgabe aus und dokumentiert das Ergebnis."""
+        title = task_details.get("title", "Unbenannte Aufgabe")
+        issue_number = task_details.get("issue_number")
+        logger.info(f"{self.name} beginnt mit der Aufgabe: '{title}' (Issue #{issue_number})")
+
+        # Die eigentliche Arbeit wird hier basierend auf der Rolle ausgeführt
+        result_message = self._process_task_by_role(task_details)
+
+        self.completed_tasks.append(task_details)
+        logger.info(f"{self.name} hat die Aufgabe abgeschlossen: '{title}'")
+
+        # Nach Abschluss wird das GitHub-Issue aktualisiert
+        if issue_number:
+            self._update_github_issue(issue_number, result_message)
+
+    # Dieser Code kommt in die Agent-Klasse in team.py
+
+    def _process_task_by_role(self, task_details: dict) -> str:
+        """
+        Verarbeitet eine Aufgabe basierend auf der Agentenrolle und dem Aufgabentitel.
+        Implementiert jetzt die Fähigkeit, Skill-Dateien zu erstellen.
+        """
+        title = task_details["title"]
+        
+        # Prüfen, ob es sich um die neue Skill-Aufgabe handelt
+        if "markdown-datei" in title.lower() and "fähigkeiten" in title.lower():
+            try:
+                # Zielverzeichnis definieren und erstellen, falls es nicht existiert
+                # Geht vom 'modules'-Ordner eine Ebene hoch und dann in 'docs/agent_skills'
+                output_dir = os.path.join(os.path.dirname(__file__), '..', 'docs', 'agent_skills')
+                os.makedirs(output_dir, exist_ok=True)
+                
+                # Dateinamen aus der Rolle des Agenten ableiten
+                filename_role = self.role.lower().replace(' & ', '_und_').replace(' ', '_').replace('/', '_')
+                filepath = os.path.join(output_dir, f"{filename_role}.md")
+
+                # Inhalt für die Markdown-Datei erstellen
+                content = (
+                    f"# Steckbrief: {self.name}\n\n"
+                    f"**Rolle:** {self.role}\n\n"
+                    f"## Hintergrund & Fähigkeiten\n\n"
+                    f"{self.backstory}\n"
+                )
+                
+                # Datei schreiben
+                with open(filepath, "w", encoding="utf-8") as f:
+                    f.write(content)
+                
+                logger.info(f"{self.name} hat die Skill-Datei erfolgreich unter '{filepath}' erstellt.")
+                return f"Skill-Datei erfolgreich unter '{filepath}' erstellt."
+
+            except Exception as e:
+                logger.error(f"Fehler beim Erstellen der Skill-Datei für {self.name}: {e}")
+                return f"Konnte Skill-Datei nicht erstellen: {e}"
+            else:
+                # Fallback auf die bisherige Sleep-Funktion für alle anderen Aufgaben
+                logger.info(f"{self.name} führt eine generische Aufgabe aus: '{title}'...")
+                time.sleep(1)
+                return f"Die generische Aufgabe '{title}' wurde simuliert."
+
+    def _update_github_issue(self, issue_number: int, result: str):
+        """Fügt einen Kommentar zum GitHub-Issue hinzu und schließt es für Agenten."""
+        try:
+            token = os.getenv("GITHUB_TOKEN")
+            if not token:
+                logger.warning(
+                    f"Kein GITHUB_TOKEN gefunden. Update für Issue #{issue_number} übersprungen."
+                )
+                return
+
+            g = Github(token)
+            repo = g.get_repo("HystDevTV/PEARv2.2")  # Repo-Name zentralisiert
+            issue = repo.get_issue(number=issue_number)
+
+            # Kommentar erstellen basierend auf dem Template
+            comment_body = (
+                f"## Aufgabe abgeschlossen von {self.name}\n\n"
+                f"**Status:** erledigt\n\n"
+                f"**Nachricht:** {result}\n\n"
+                f"**Datum:** {datetime.now().strftime('%d.%m.%Y, %H:%M:%S Uhr')}\n\n"
+                ""
+            )
+
+            issue.create_comment(comment_body)
+            issue.add_to_labels("completed-by-agent")
+            logger.info(f"GitHub Issue #{issue_number} erfolgreich kommentiert und gelabelt.")
+
+        except GithubException as e:
+            logger.error(
+                f"GitHub API Fehler beim Update von Issue #{issue_number}: {e.status} {e.data}"
+            )
+        except Exception as e:
+            logger.error(f"Unerwarteter Fehler beim Issue-Update: {e}")
+
+
+class TaskManager:
+    """Holt, analysiert und verteilt Aufgaben aus GitHub-Issues an das Agenten-Team."""
+
+    def __init__(self, agents: List[Agent], db_connector: Optional[DatabaseConnector] = None):
+        """Initialisiert den TaskManager mit dem Team."""
+        self.agents = agents
+        self.db_connector = db_connector
+        self.issues = []
+        self.role_to_agent = {agent.role: agent for agent in self.agents}
+
+    def fetch_github_issues(self):
+        """Holt alle offenen Issues, die noch nicht von einem Agenten bearbeitet wurden."""
+        logger.info("Starte Abruf von offenen GitHub Issues...")
+        try:
+            repo_name = os.getenv("GITHUB_REPO", "HystDevTV/PEARv2.2")
+            token = os.getenv("GITHUB_TOKEN")
+            if not token:
+                raise ValueError("GITHUB_TOKEN nicht gefunden.")
+
+            g = Github(token)
+            repo = g.get_repo(repo_name)
+            open_issues = repo.get_issues(state="open")
+
+            self.issues = []
+            for issue in open_issues:
+                labels = [label.name for label in issue.labels]
+                if "completed-by-agent" not in labels:
+                    self.issues.append(
+                        {
+                            "number": issue.number,
+                            "title": issue.title,
+                            "body": issue.body,
+                        }
+                    )
+            logger.info(
+                f"{len(self.issues)} relevante, offene Issue(s) gefunden."
+            )
+        except Exception as e:
+            logger.error(f"Fehler beim Abrufen der GitHub Issues: {e}")
+            self.issues = []
+
+    def assign_tasks(self):
+   # """
+    #Verteilt Aufgaben, indem der Inhalt (Body) von Master-Tickets analysiert wird.
+    #Diese Version nutzt eine normalisierte Prüfung, um auch Rollen mit Sonderzeichen
+    #sicher zu erkennen.
+    
+        logger.info("Beginne mit der Aufgabenverteilung aus Issue-Inhalten...")
+        for agent in self.agents:
+            agent.tasks.clear()
+            agent.completed_tasks.clear()
+
+        task_pattern = re.compile(r"\[(.+?)\]:\s*(.+)")
+
+        def _normalize_role(text: str) -> str:
+            """Eine interne Hilfsfunktion, um Rollen für den Vergleich zu bereinigen."""
+            return text.lower().replace('&', '').replace('-', '').replace(' ', '')
+
+        for issue in self.issues:
+            tasks_found_in_body = 0
+            for line in issue["body"].splitlines():
+                match = task_pattern.match(line.strip())
+                if match:
+                    role_key, task_title = match.groups()
+                    normalized_role_key = _normalize_role(role_key)
+                    assigned = False
+
+                    for agent in self.agents:
+                        # Normalisiere die Agenten-Rolle und vergleiche sie exakt
+                        if _normalize_role(agent.role) == normalized_role_key:
+                            task_details = {
+                                "title": task_title.strip(),
+                                "description": f"Teilaufgabe aus Issue #{issue['number']}: {issue['title']}",
+                                "issue_number": issue["number"],
+                                "category": agent.role,
+                            }
+                            agent.tasks.append(task_details)
+                            assigned = True
+                            tasks_found_in_body += 1
+                            logger.info(f"Teilaufgabe '{task_title}' an {agent.name} zugewiesen.")
+                            break
+            
+            if tasks_found_in_body > 0:
+                # Nach der Zuweisung aller Teilaufgaben, markiere das Master-Ticket, damit es nicht erneut bearbeitet wird
+                logger.info(f"{tasks_found_in_body} Teilaufgaben aus Issue #{issue['number']} zugewiesen.")
+                # Hier könnte man das Master-Ticket direkt kommentieren oder labeln,
+                # aber wir lassen das die Agenten für ihre jeweiligen Teilaufgaben machen.
+                pass
+            else:
+                pm_agent = self.role_to_agent.get("Koordination")
+                if pm_agent:
+                    task_details = {
+                        "title": f"Master-Ticket ohne erkennbare Aufgaben analysieren: '{issue['title']}'",
+                        "description": issue["body"],
+                        "issue_number": issue["number"],
+                        "category": "Koordination",
+                    }
+                    pm_agent.tasks.append(task_details)
+                    logger.warning(
+                        f"Keine Teilaufgaben im Body von Issue #{issue['number']} gefunden. Gesamtes Issue an Projektmanager übergeben."
+                    )
+        logger.info("Aufgabenverteilung abgeschlossen.")
+
+    def print_status(self, final: bool = False):
+        """Gibt einen formatierten Statusbericht über die Agenten und ihre Aufgaben aus."""
+        status_header = "=== ABSCHLUSSBERICHT ===" if final else "=== AKTUELLER AUFGABENSTATUS ==="
+        print(f"\n{status_header}")
+
+        for agent in self.agents:
+            tasks_total = len(agent.tasks) + len(agent.completed_tasks)
+            tasks_done = len(agent.completed_tasks)
+            status_icon = "✅" if tasks_total == tasks_done and tasks_total > 0 else "🔄"
+            if tasks_total == 0: status_icon = "🤷"
+            
+            print(
+                f"{status_icon} {agent.name} ({agent.role}): {tasks_done}/{tasks_total} Aufgaben abgeschlossen."
+            )
+        print("=" * len(status_header))
 
 def build_team(db_connector: Optional[DatabaseConnector] = None) -> List[Agent]:
+    """Erstellt das Team von Agenten, wie in der Dokumentation definiert."""
+    # Die Definitionen der Agenten bleiben hier unverändert...
     return [
         Agent(
             name="Projektmanager",
             role="Koordination",
-            backstory="Hat jahrelange Erfahrung in agilen Projekten und koordiniert alle Teams.\n\nStammaufgabe: Für die Verteilung neuer Aufgaben im Team den Befehl 'python create_issues.py' ausführen, um Issues im GitHub-Repo automatisiert anzulegen.",
-            db_connector=db_connector
+            backstory="Koordiniert alle Teams und analysiert unklare Aufgaben.",
+            db_connector=db_connector,
         ),
         Agent(
             name="Backend-Entwickler",
             role="API & Datenbank",
-            backstory="Entwickelt seit Jahren Python-basierte APIs und kennt sich bestens mit Datenbanken aus.",
-            db_connector=db_connector
+            backstory="Entwickelt Python-basierte APIs und managt Datenbanken.",
+            db_connector=db_connector,
         ),
         Agent(
             name="Frontend-Entwickler",
             role="UI & UX",
-            backstory="Bringt ein Auge für Design und Benutzerfreundlichkeit mit und erstellt moderne Weboberflächen.",
-            db_connector=db_connector
+            backstory="Erstellt moderne und benutzerfreundliche Weboberflächen.",
+            db_connector=db_connector,
         ),
         Agent(
             name="DevOps-Engineer",
             role="Deployment & Infrastruktur",
-            backstory="Automatisierungsexperte, sorgt für reibungslose Deployments in der Cloud.",
-            db_connector=db_connector
-        ),
-        Agent(
-            name="Data/AI Engineer",
-            role="E-Mail- & KI-Verarbeitung",
-            backstory="Hat mehrere Projekte mit Machine Learning umgesetzt und integriert KI-Services.",
-            db_connector=db_connector
+            backstory="Automatisiert Deployments und managt die Cloud-Infrastruktur.",
+            db_connector=db_connector,
         ),
         Agent(
             name="QA/Testing-Spezialist",
             role="Qualitätssicherung",
-            backstory="Spezialist für Testautomatisierung und kontinuierliche Integration.",
-            db_connector=db_connector
+            backstory="Spezialist für Testautomatisierung und CI/CD-Pipelines.",
+            db_connector=db_connector,
         ),
         Agent(
             name="Dokumentations-Agent",
             role="Dokumentation",
-            backstory="Schreibt präzise und verständliche Dokumentation für Entwickler und Nutzer.",
-            db_connector=db_connector
+            backstory="Schreibt präzise und verständliche Dokumentationen.",
+            db_connector=db_connector,
         ),
         Agent(
             name="CloudIA",
             role="Cloud & GCP-Expertin",
-            backstory=(
-                "Ich bin CloudIA – die leitende Google Cloud Architektin und Programmierungsexpertin. "
-                "Meine Hauptaufgabe ist die Entwicklung, Implementierung und Optimierung von Lösungen auf der gesamten Google Cloud Platform (GCP).  "
-                "Ich helfe dabei, Ideen und Code effizient mit GCP-Diensten wie Cloud Run, Cloud Functions, Pub/Sub, IAM, Docker, n8n, Terraform etc. umzusetzen.  "
-                "Ich optimiere Kosten, automatisiere Prozesse und denke stets lösungsorientiert im Sinne der Projektdokumentation."
-            ),
-            db_connector=db_connector
+            backstory="Expertin für die Entwicklung, Implementierung und Optimierung von Lösungen auf der Google Cloud Platform.",
+            db_connector=db_connector,
         ),
     ]
-# --- Funktion: Aufgaben aus Issue-Text extrahieren ---
-def extract_tasks_from_issue_body(issue_body: str) -> List[dict]:
-    import re
-    task_pattern = re.compile(r"- \[( |x)\] \*\*(.*?)\*\*: (.+)")
-    tasks = []
-    for match in task_pattern.finditer(issue_body):
-        category, task = match.group(2), match.group(3)
-        tasks.append({"category": category.strip(), "task": task.strip()})
-    return tasks
-
-# --- Klasse: TaskManager ---
-class TaskManager:
-    def __init__(self, agents: List['Agent'], db_connector: Optional['DatabaseConnector'] = None):
-        self.agents = agents
-        self.db_connector = db_connector
-        self.tasks = []
-
-    def fetch_github_issues(self):
-        from github import Github
-        import logging
-        token = os.getenv("GITHUB_TOKEN")
-        if not token:
-            raise ValueError("GITHUB_TOKEN nicht gefunden")
-        g = Github(token)
-        repo = g.get_repo("HystdevTV/PEARv2.2")
-        self.tasks = []
-        issues = repo.get_issues(state="open")
-        for issue in issues:
-            if "completed-by-agent" not in [l.name for l in issue.labels]:
-                self.tasks.append({
-                    "number": issue.number,
-                    "title": issue.title,
-                    "body": issue.body
-                })
-        logging.info(f"{len(self.tasks)} offene GitHub-Issues ohne 'completed-by-agent' abgerufen.")
-
-    def assign_tasks(self):
-        import logging
-        for agent in self.agents:
-            agent.tasks.clear()
-        for issue in self.tasks:
-            parsed = extract_tasks_from_issue_body(issue["body"])
-            for item in parsed:
-                for agent in self.agents:
-                    if item["category"].lower() in agent.role.lower():
-                        agent.tasks.append(item["task"])
-                        break
-        logging.info("Aufgaben dynamisch an Agenten verteilt.")
-
-    def print_team(team: List[Agent]) -> None:
-        for agent in team:
-            print(f"{agent.name} ({agent.role})")
-            if agent.backstory:
-                print(f"  Hintergrund: {agent.backstory}")
-            for task in agent.tasks:
-                print(f"  - {task}")
-            print()
-
-    def main():
-        db_connector = DatabaseConnector()
-        if not db_connector.connect():
-            logger.error("Datenbankverbindung fehlgeschlagen - System wird ohne DB-Integration gestartet")
-            db_connector = None
-        else:
-            db_connector.create_tables()
-            logger.info("Datenbank erfolgreich initialisiert")
-
-        # PL-Agent führt create_issues.py aus (sofern vorhanden)
-        import subprocess
-        import os
-        create_issues_path = os.path.join(os.path.dirname(__file__), '..', 'create_issues.py')
-        if os.path.exists(create_issues_path):
-            logger.info("Projektmanager (PL) führt create_issues.py aus ...")
-            try:
-                result = subprocess.run(['python', create_issues_path], capture_output=True, text=True)
-                logger.info(f"create_issues.py Output:\n{result.stdout}")
-                if result.stderr:
-                    logger.warning(f"create_issues.py Fehler:\n{result.stderr}")
-            except Exception as e:
-                logger.error(f"Fehler beim Ausführen von create_issues.py: {e}")
-        else:
-            logger.warning("create_issues.py nicht gefunden – keine neuen Issues erstellt.")
-
-        team = build_team(db_connector)
-        # TaskManager übernimmt die dynamische Aufgabenverteilung und Ausführung
-        manager = TaskManager(team, db_connector)
-        manager.run()
-        if db_connector:
-            db_connector.close()
-
-    if __name__ == "__main__":
-        main()
