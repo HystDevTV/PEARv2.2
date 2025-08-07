@@ -1,9 +1,36 @@
 steps:
+  # Schritt 1: Docker-Image aus dem Unterordner bauen und für die Artifact Registry taggen
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/pear-dev-teamv1/dev-team-pear-agenten:$COMMIT_SHA', '-t', 'gcr.io/pear-dev-teamv1/dev-team-pear-agenten:latest', './pear-backend']
-images:
-  - 'gcr.io/pear-dev-teamv1/dev-team-pear-agenten:$COMMIT_SHA'
-  - 'gcr.io/pear-dev-teamv1/dev-team-pear-agenten:latest'
-options:
-  logging: CLOUD_LOGGING_ONLY
-  default_logs_bucket_behavior: REGIONAL_USER_OWNED_BUCKET
+    args:
+      - 'build'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:${COMMIT_SHA}'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:latest'
+      - './pear-email-processor-function' # Der Ordner, der den Code enthält
+
+  # Schritt 2: Das gebaute Image in die Artifact Registry hochladen
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:latest']
+
+  # Schritt 3: Das neue Image automatisch auf Cloud Run bereitstellen
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_SERVICE_NAME}'
+      - '--image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:${COMMIT_SHA}'
+      - '--region=${_REGION}'
+      - '--platform=managed'
+      - '--allow-unauthenticated' # Wichtig, damit der Storage-Trigger den Dienst aufrufen kann
+      - '--set-env-vars=FASTAPI_API_URL=${_FASTAPI_URL}' # Übergibt die URL Ihrer VM als Umgebungsvariable
+
+# Variablen, die im Build-Prozess verwendet werden. Können bei Bedarf angepasst werden.
+substitutions:
+  _SERVICE_NAME: 'pear-email-processor'
+  _REPO_NAME: 'pear-main-repo' # Der Name für Ihr Artifact Registry Repository
+  _REGION: 'us-central1'
+  # WICHTIG: Stellen Sie sicher, dass dies die korrekte, aktuelle externe IP der VM ist,
+  # auf der Ihre backend_app.py läuft.
+  _FASTAPI_URL: 'http://35.206.123.242:8000'
