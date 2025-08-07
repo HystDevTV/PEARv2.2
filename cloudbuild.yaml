@@ -26,7 +26,7 @@ steps:
       - '--allow-unauthenticated'
       - '--set-env-vars=FASTAPI_API_URL=${_FASTAPI_URL}'
 
-# Variablen, die im Build-Prozess verwendet werden.
+# Variablen, die im Build-Prozess verwendet werden....
 substitutions:
   _SERVICE_NAME: 'pear-email-processor'
   _REPO_NAME: 'pear-images'
