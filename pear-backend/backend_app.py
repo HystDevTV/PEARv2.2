@@ -14,7 +14,7 @@ app = FastAPI(
     version="0.1.0",
 )
 
-# Passwort-Hashing-Kontext initialisieren [cite: 22]
+# Passwort-Hashing-Kontext initialisieren
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # --- Datenbankverbindung ---
@@ -37,7 +37,7 @@ def get_db_connection():
 
 # --- Pydantic-Modelle (Datenstrukturen) ---
 class RegisterUser(BaseModel):
-    """Datenmodell für die Benutzer-Registrierung.""" [cite: 15]
+    """Datenmodell für die Benutzer-Registrierung."""
     full_name: str
     email: EmailStr
     password: str
@@ -63,8 +63,8 @@ async def read_root():
 
 @app.post("/api/register", status_code=201, tags=["Authentication"])
 async def register_user(user: RegisterUser, db: mysql.connector.MySQLConnection = Depends(get_db_connection)):
-    """Registriert einen neuen Alltagsbegleiter im System.""" [cite: 16]
-    # Passwort-Validierung [cite: 18]
+    """Registriert einen neuen Alltagsbegleiter im System."""
+    # Passwort-Validierung
     if user.password != user.password_confirmation:
         raise HTTPException(status_code=400, detail="Passwörter stimmen nicht überein.")
     if len(user.password) < 8:
@@ -72,15 +72,15 @@ async def register_user(user: RegisterUser, db: mysql.connector.MySQLConnection 
 
     cursor = db.cursor()
     
-    # Prüfen, ob die E-Mail bereits existiert [cite: 21]
+    # Prüfen, ob die E-Mail bereits existiert
     cursor.execute("SELECT id FROM tbl_begleiter WHERE kontakt_email = %s", (user.email,))
     if cursor.fetchone():
         raise HTTPException(status_code=409, detail="Ein Benutzer mit dieser E-Mail-Adresse existiert bereits.")
 
-    # Passwort hashen [cite: 22]
+    # Passwort hashen
     hashed_password = pwd_context.hash(user.password)
 
-    # Benutzer in die Datenbank einfügen [cite: 23]
+    # Benutzer in die Datenbank einfügen
     try:
         query = """
             INSERT INTO tbl_begleiter 
@@ -98,24 +98,87 @@ async def register_user(user: RegisterUser, db: mysql.connector.MySQLConnection 
     finally:
         cursor.close()
 
-    return {"message": "Registrierung erfolgreich!"} [cite: 24]
+    return {"message": "Registrierung erfolgreich!"}
 
 
 @app.post("/api/extract_and_register_client", tags=["Email Automation"])
 async def extract_and_register_client(payload: EmailPayload, db: mysql.connector.MySQLConnection = Depends(get_db_connection)):
     """
-    Nimmt rohen E-Mail-Text entgegen, ruft Gemini zur Extraktion auf
-    und legt einen neuen Klienten an. (Logik wird noch implementiert)
+    Nimmt rohen E-Mail-Text entgegen, extrahiert die Kundendaten,
+    validiert sie und legt bei Erfolg einen neuen Klienten in der Datenbank an.
     """
     if not payload.email_content:
-        raise HTTPException(status_code=400, detail="Email content is missing")
+        raise HTTPException(status_code=400, detail="E-Mail-Inhalt fehlt.")
 
     print(f"E-Mail-Inhalt für die Verarbeitung erhalten: {payload.email_content[:200]}...")
 
-    # TODO: Logik für Gemini API-Aufruf zur Datenextraktion einfügen
-    # extracted_data = call_gemini(payload.email_content)
-    
-    # TODO: Logik zum Einfügen der extrahierten Daten in die tbl_kunden
-    # insert_client_into_db(extracted_data)
+    # --- 1. Datenextraktion (simuliert) ---
+    lines = payload.email_content.strip().split('\n')
+    extracted_data = {}
+    for line in lines:
+        if ':' in line:
+            key, value = line.split(':', 1)
+            normalized_key = key.strip().lower().replace(' ', '_').replace('(', '').replace(')', '')
+            extracted_data[normalized_key] = value.strip()
 
-    return {"status": "success", "message": "Email received and is being processed."}
+    # --- 2. Validierung ---
+    required_fields = [
+        'name_vollstaendig', 'kontakt_telefon', 'kontakt_email', 'adresse_strasse',
+        'alter', 'adresse_hausnummer', 'adresse_plz', 'adresse_ort',
+        'firmenname_klientenvermittlung', 'steuernummer_fiktiv'
+    ]
+    missing_fields = [field for field in required_fields if field not in extracted_data or not extracted_data[field]]
+
+    if missing_fields:
+        error_message = f"Datensatz unvollständig. Folgende Felder fehlen: {', '.join(missing_fields)}."
+        print(f"VALIDIERUNGSFEHLER: {error_message}")
+        raise HTTPException(status_code=422, detail=error_message)
+
+    # --- 3. Erfolgsfall: Daten aufbereiten und in DB einfügen ---
+    try:
+        hashed_password = pwd_context.hash("default_klient_password_placeholder")
+        rolle = "Neukunde"
+        
+        cursor = db.cursor()
+        query = """
+            INSERT INTO tbl_kunden (
+                name_vollstaendig, kontakt_telefon, kontakt_email, adresse_strasse,
+                adresse_hausnummer, adresse_plz, adresse_ort, alter,
+                firmenname_vermittler, steuernummer_vermittler,
+                passwort_hash, rolle, ist_aktiv, erstellt_am
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, TRUE, NOW())
+        """
+        values = (
+            extracted_data['name_vollstaendig'],
+            extracted_data['kontakt_telefon'],
+            extracted_data['kontakt_email'],
+            extracted_data['adresse_strasse'],
+            extracted_data['adresse_hausnummer'],
+            extracted_data['adresse_plz'],
+            extracted_data['adresse_ort'],
+            int(extracted_data['alter']),
+            extracted_data['firmenname_klientenvermittlung'],
+            extracted_data['steuernummer_fiktiv'],
+            hashed_password,
+            rolle
+        )
+        cursor.execute(query, values)
+        db.commit()
+        
+        new_client_id = cursor.lastrowid
+        print(f"Neuer Klient erfolgreich mit ID {new_client_id} in der Datenbank angelegt.")
+
+    except Error as e:
+        print(f"DATENBANKFEHLER: {e}")
+        raise HTTPException(status_code=500, detail=f"Datenbankfehler beim Erstellen des Klienten: {e}")
+    finally:
+        cursor.close()
+
+    # --- 4. Bestätigungs-E-Mails (simuliert) ---
+    print("PROZESS ERFOLGREICH. Sende Bestätigungs-E-Mails...")
+
+    return {
+        "status": "success",
+        "message": "Klient erfolgreich erstellt.",
+        "client_id": new_client_id
+    }
