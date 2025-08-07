@@ -1,0 +1,17 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/pear-dev-teamv1/dev-team-pear-agenten:$COMMIT_SHA'
+      - '-t'
+      - 'gcr.io/pear-dev-teamv1/dev-team-pear-agenten:latest'
+      - '.'  # <--- Dockerfile liegt im Root!
+
+images:
+  - 'gcr.io/pear-dev-teamv1/dev-team-pear-agenten:$COMMIT_SHA'
+  - 'gcr.io/pear-dev-teamv1/dev-team-pear-agenten:latest'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  default_logs_bucket_behavior: REGIONAL_USER_OWNED_BUCKET

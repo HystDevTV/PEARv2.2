@@ -1,58 +1,73 @@
-import os
-import requests
-from pathlib import Path
+import logging
 import sys
 import threading
-import time
+from pathlib import Path
 
-# ``team.py`` liegt eine Ebene höher im Repository.
-sys.path.append(str(Path(__file__).resolve().parent.parent))
+# Fügt das Elternverzeichnis zum Python-Pfad hinzu, damit 'team.py' gefunden wird
+sys.path.append(str(Path(__file__).resolve().parent))
 
-from team import build_team
+# Importiert die notwendigen Klassen und Funktionen aus dem team-Modul
+from team import TaskManager, build_team
 
-def create_github_issue(title, body):
-    GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-    REPO = "HystdevTV/PEARv2"  # z.B. "HystDevTV/PEARv2"
-    url = f"https://api.github.com/repos/{REPO}/issues"
-    headers = {
-        "Authorization": f"token {GITHUB_TOKEN}",
-        "Accept": "application/vnd.github+json"
-    }
-    data = {"title": title, "body": body}
-    response = requests.post(url, headers=headers, json=data)
-    response.raise_for_status()
-    print(f"Issue erstellt: {title}")
+# Konfiguriert das Logging für dieses Skript
+logger = logging.getLogger("PEAR-Orchestrator")
 
-def agent_worker(agent, team=None):
-    print(f"{agent.name} startet Aufgabenbearbeitung...")
-    if agent.role == "Koordination" and team is not None:
-        # Automatisierung: Für jede Aufgabe der anderen Agenten ein Issue anlegen
-        for other in team:
-            if other is agent:
-                continue
-            for task in other.tasks:
-                issue_title = f"{other.role}: {task}"
-                issue_body = f"Automatisch erstellt durch den Projektmanager für {other.name} ({other.role})"
-                create_github_issue(issue_title, issue_body)
-                time.sleep(0.5)  # Optional: kleine Pause zwischen den Requests
-    else:
-        for task in agent.tasks:
-            print(f"{agent.name} erledigt: {task}")
-            time.sleep(1)
-    print(f"{agent.name} hat alle Aufgaben erledigt.\n")
 
-def run_agents() -> None:
-    team = build_team()
+def agent_worker(agent):
+    """
+    Diese Worker-Funktion wird in einem separaten Thread für jeden Agenten ausgeführt.
+    Sie delegiert die gesamte Aufgabenlogik direkt an den Agenten.
+    """
+    try:
+        # Der Agent weiß selbst, wie er seine Aufgaben ausführen muss
+        agent.execute_all_tasks()
+    except Exception as e:
+        # Fängt Fehler ab, die während der Ausführung eines Agenten auftreten
+        logger.error(f"Ein Fehler ist im Thread von '{agent.name}' aufgetreten: {e}", exc_info=True)
+
+
+def run_team_orchestration():
+    """
+    Die Hauptfunktion, die den gesamten Prozess der Agenten-Orchestrierung steuert.
+    """
+    logger.info("🚀 Starte PEAR Agenten-System...")
     threads = []
-    for agent in team:
-        # Dem Projektleiter das ganze Team übergeben, den anderen nicht nötig
-        args = (agent, team) if agent.role == "Koordination" else (agent,)
-        t = threading.Thread(target=agent_worker, args=args)
-        t.start()
-        threads.append(t)
-    for t in threads:
-        t.join()
-    print("Alle Agenten sind fertig!")
+
+    try:
+        # 1. Team und TaskManager initialisieren
+        # Die Datenbankverbindung wird hier nicht direkt benötigt, da sie in team.py gekapselt ist.
+        team = build_team()
+        manager = TaskManager(team)
+
+        # 2. Aufgaben aus GitHub holen und an die Agenten verteilen
+        manager.fetch_github_issues()
+        manager.assign_tasks()
+        
+        # 3. Initialen Status ausgeben, bevor die Arbeit beginnt
+        manager.print_status(final=False)
+
+        # 4. Agenten-Threads erstellen und starten
+        logger.info(f"👥 Starte {len(team)} Agenten in parallelen Threads...")
+        for agent in team:
+            # Für jeden Agenten wird ein eigener Thread gestartet
+            thread = threading.Thread(target=agent_worker, args=(agent,))
+            threads.append(thread)
+            thread.start()
+
+        # 5. Auf den Abschluss aller Threads warten
+        logger.info("⏳ Warte auf den Abschluss aller Agenten-Aufgaben...")
+        for thread in threads:
+            thread.join()
+
+        # 6. Finalen Statusbericht ausgeben
+        logger.info("✨ Alle Agenten haben ihre Arbeit abgeschlossen!")
+        manager.print_status(final=True)
+
+    except KeyboardInterrupt:
+        logger.warning("\n⚠️ Prozess wurde durch den Benutzer (Strg+C) unterbrochen.")
+    except Exception as e:
+        logger.critical(f"\n❌ Ein kritischer Fehler ist im Hauptprozess aufgetreten: {e}", exc_info=True)
+
 
 if __name__ == "__main__":
-    run_agents()
+    run_team_orchestration()
