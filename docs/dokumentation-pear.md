@@ -28,7 +28,130 @@ Das Ziel des Infrastruktur-Setups auf der Google Cloud Platform ist die Bereitst
         ◦ Hosting-Strategie: Die Datenbank ist manuell auf der projekt-pear-vm installiert, um Kosten zu sparen. 
         ◦ Datenbank-Name: pear_app_db (korrigiert von fleissige_birne_app_db). 
         ◦ Zugriff: Der Zugriff ist nur intern (localhost) von Diensten auf derselben VM möglich. 
-        ◦ Schema-Import: Das schema.sql wurde für MySQL angepasst und erfolgreich importiert, inklusive Anpassungen wie SERIAL PRIMARY KEY zu INT AUTO_INCREMENT PRIMARY KEY und Erweiterung der tbl_begleiter um Adress- und Firmeninformationen. Das Schema umfasst Tabellen für Kunden, Begleiter, Termine, Dokumentationen, Rechnungen und Rechnungspositionen. 
+        ◦ Schema-Import: Das schema.sql wurde für MySQL angepasst und erfolgreich importiert, inklusive Anpassungen wie SERIAL PRIMARY KEY zu INT AUTO_INCREMENT PRIMARY KEY und Erweiterung der tbl_begleiter um Adress- und Firmeninformationen. Das Schema umfasst Tabellen für Kunden, Begleiter, Termine, Dokumentationen, Rechnungen und Rechnungspositionen.
+
+### 3.1 Datenbankdetails und -struktur
+
+Die PEAR-Anwendung nutzt eine MySQL-Datenbank zur persistenten Speicherung aller relevanten Daten. Die Datenbank ist auf der Google Compute Engine VM `projekt-pear-vm` installiert und konfiguriert, um den Zugriff auf `localhost` zu beschränken, was die Sicherheit erhöht.
+
+**Findbarkeit und Analyse der Datenbankstruktur:**
+Die Datenbankstruktur wird nicht direkt im Python-Code der Anwendung (z.B. in `modules/team.py`) durch `CREATE TABLE`-Anweisungen verwaltet. Stattdessen wird das Schema extern über ein `schema.sql`-Skript importiert, das manuell auf der VM ausgeführt wird. Die Analyse der Datenbankstruktur erfolgte durch direkte Verbindung zur MySQL-Instanz auf der VM mittels des `mysql`-Clients und Abfrage der Tabellendefinitionen.
+
+**Datenbankname:** `pear_app_db`
+
+**Übersicht der Tabellen:**
+
+Die `pear_app_db` enthält die folgenden Haupttabellen, die die Kernfunktionalitäten der PEAR-Anwendung abbilden:
+
+#### `tbl_kunden`
+Speichert detaillierte Informationen über die Kunden, einschließlich persönlicher Daten, Adressen und Betreuungsinformationen.
+
+| Feld                        | Typ           | Null | Key | Default           | Extra                                         |
+|----------------------------|---------------|------|-----|-------------------|-----------------------------------------------|
+| `kunden_id`                | `int`         | NO   | PRI | `NULL`            | `auto_increment`                              |
+| `name_vollstaendig`        | `varchar(255)`| NO   | UNI | `NULL`            |                                               |
+| `adresse_strasse`          | `varchar(255)`| NO   |     | `NULL`            |                                               |
+| `adresse_hausnummer`       | `varchar(50)` | YES  |     | `NULL`            |                                               |
+| `adresse_plz`              | `varchar(20)` | NO   | MUL | `NULL`            |                                               |
+| `adresse_ort`              | `varchar(255)`| NO   |     | `NULL`            |                                               |
+| `adresszusatz`             | `text`        | YES  |     | `NULL`            |                                               |
+| `kontakt_telefon`          | `varchar(50)` | YES  |     | `NULL`            |                                               |
+| `kontakt_email`            | `varchar(255)`| YES  |     | `NULL`            |                                               |
+| `besondere_hinweise`       | `text`        | YES  |     | `NULL`            |                                               |
+| `geplante_stunden_pro_woche`| `decimal(5,2)`| YES  |     | `NULL`            |                                               |
+| `betreuungsbeginn`         | `date`        | YES  |     | `NULL`            |                                               |
+| `ist_aktiv`                | `tinyint(1)`  | YES  |     | `1`               |                                               |
+| `erstellt_am`              | `datetime`    | YES  |     | `CURRENT_TIMESTAMP`| `DEFAULT_GENERATED`                           |
+| `aktualisiert_am`          | `datetime`    | YES  |     | `CURRENT_TIMESTAMP`| `DEFAULT_GENERATED on update CURRENT_TIMESTAMP`|
+
+#### `tbl_dokumentationen`
+Speichert die Inhalte von Dokumentationen, die mit spezifischen Terminen und Begleitern verknüpft sind.
+
+| Feld                | Typ           | Null | Key | Default           | Extra                                         |
+|--------------------|---------------|------|-----|-------------------|-----------------------------------------------|
+| `dokumentation_id` | `int`         | NO   | PRI | `NULL`            | `auto_increment`                              |
+| `termin_id`        | `int`         | NO   | MUL | `NULL`            |                                               |
+| `begleiter_id`     | `int`         | NO   | MUL | `NULL`            |                                               |
+| `inhalt_text`      | `text`        | NO   |     | `NULL`            |                                               |
+| `status_dok`       | `varchar(50)` | NO   |     | `Entwurf`         |                                               |
+| `erstellt_am`      | `datetime`    | YES  |     | `CURRENT_TIMESTAMP`| `DEFAULT_GENERATED`                           |
+| `aktualisiert_am`  | `datetime`    | YES  |     | `CURRENT_TIMESTAMP`| `DEFAULT_GENERATED on update CURRENT_TIMESTAMP`|
+
+#### `tbl_rechnungen`
+Enthält Informationen zu erstellten Rechnungen, einschließlich Rechnungsnummer, Kundenzuordnung, Beträge und Zahlungsstatus.
+
+| Feld                  | Typ           | Null | Key | Default           | Extra                                         |
+|----------------------|---------------|------|-----|-------------------|-----------------------------------------------|
+| `rechnung_id`        | `int`         | NO   | PRI | `NULL`            | `auto_increment`                              |
+| `rechnungsnummer`    | `varchar(50)` | NO   | UNI | `NULL`            |                                               |
+| `kunden_id`          | `int`         | NO   | MUL | `NULL`            |                                               |
+| `rechnungsdatum`     | `date`        | NO   |     | `NULL`            |                                               |
+| `faelligkeitsdatum`  | `date`        | NO   |     | `NULL`            |                                               |
+| `gesamtbetrag_brutto`| `decimal(10,2)`| NO   |     | `NULL`            |                                               |
+| `status_zahlung`     | `varchar(50)` | NO   |     | `Offen`           |                                               |
+| `bezahlt_am`         | `date`        | YES  |     | `NULL`            |                                               |
+| `rechnungs_pdf_pfad` | `text`        | YES  |     | `NULL`            |                                               |
+| `versand_status`     | `varchar(50)` | YES  |     | `NULL`            |                                               |
+| `erstellt_am`        | `datetime`    | YES  |     | `CURRENT_TIMESTAMP`| `DEFAULT_GENERATED`                           |
+| `aktualisiert_am`    | `datetime`    | YES  |     | `CURRENT_TIMESTAMP`| `DEFAULT_GENERATED on update CURRENT_TIMESTAMP`|
+
+#### `tbl_rechnungspositionen`
+Detailliert die einzelnen Positionen, die zu einer Rechnung gehören, einschließlich Leistungsbeschreibung, Menge und Einzelpreis.
+
+| Feld                    | Typ           | Null | Key | Default           | Extra             |
+|------------------------|---------------|------|-----|-------------------|-------------------|
+| `rechnungspos_id`      | `int`         | NO   | PRI | `NULL`            | `auto_increment`  |
+| `rechnung_id`          | `int`         | NO   | MUL | `NULL`            |                   |
+| `termin_id`            | `int`         | YES  | MUL | `NULL`            |                   |
+| `leistungsbeschreibung`| `text`        | NO   |     | `NULL`            |                   |
+| `menge`                | `decimal(7,2)`| NO   |     | `NULL`            |                   |
+| `einheit`              | `varchar(50)` | NO   |     | `NULL`            |                   |
+| `einzelpreis`          | `decimal(7,2)`| NO   |     | `NULL`            |                   |
+| `position_betrag_brutto`| `decimal(10,2)`| NO   |     | `NULL`            |                   |
+| `erstellt_am`          | `datetime`    | YES  |     | `CURRENT_TIMESTAMP`| `DEFAULT_GENERATED`|
+
+#### `tbl_termine`
+Verwaltet alle geplanten und durchgeführten Termine, mit Verknüpfungen zu Kunden und Begleitern sowie Zeit- und Statusinformationen.
+
+| Feld                      | Typ           | Null | Key | Default           | Extra                                         |
+|--------------------------|---------------|------|-----|-------------------|-----------------------------------------------|
+| `termin_id`              | `int`         | NO   | PRI | `NULL`            | `auto_increment`                              |
+| `kunden_id`              | `int`         | NO   | MUL | `NULL`            |                                               |
+| `begleiter_id`           | `int`         | YES  | MUL | `NULL`            |                                               |
+| `datum_termin`           | `date`        | NO   |     | `NULL`            |                                               |
+| `uhrzeit_geplant_start`  | `time`        | NO   |     | `NULL`            |                                               |
+| `uhrzeit_geplant_ende`   | `time`        | NO   |     | `NULL`            |                                               |
+| `zeit_ist_start`         | `datetime`    | YES  |     | `NULL`            |                                               |
+| `zeit_ist_ende`          | `datetime`    | YES  |     | `NULL`            |                                               |
+| `fahrtzeit_minuten`      | `int`         | YES  |     | `NULL`            |                                               |
+| `status_termin`          | `varchar(50)` | NO   | MUL | `Geplant`         |                                               |
+| `stunden_berechnet`      | `decimal(5,2)`| YES  |     | `NULL`            |                                               |
+| `ist_abrechnungsrelevant`| `tinyint(1)`  | YES  |     | `1`               |                                               |
+| `ist_final_abgerechnet`  | `tinyint(1)`  | YES  |     | `0`               |                                               |
+| `notizen_intern`         | `text`        | YES  |     | `NULL`            |                                               |
+| `erstellt_am`            | `datetime`    | YES  |     | `CURRENT_TIMESTAMP`| `DEFAULT_GENERATED`                           |
+| `aktualisiert_am`        | `datetime`    | YES  |     | `CURRENT_TIMESTAMP`| `DEFAULT_GENERATED on update CURRENT_TIMESTAMP`|
+
+#### `tbl_begleiter`
+Enthält Informationen über die Alltagsbegleiter, einschließlich Kontaktdaten, Authentifizierungsinformationen und Adressdetails.
+
+| Feld                | Typ           | Null | Key | Default           | Extra                                         |
+|--------------------|---------------|------|-----|-------------------|-----------------------------------------------|
+| `begleiter_id`     | `int`         | NO   | PRI | `NULL`            | `auto_increment`                              |
+| `name_vollstaendig`| `varchar(255)`| NO   |     | `NULL`            |                                               |
+| `kontakt_telefon`  | `varchar(50)` | YES  |     | `NULL`            |                                               |
+| `kontakt_email`    | `varchar(255)`| NO   | UNI | `NULL`            |                                               |
+| `passwort_hash`    | `varchar(255)`| NO   |     | `NULL`            |                                               |
+| `rolle`            | `varchar(50)` | NO   |     | `Begleiter`       |                                               |
+| `ist_aktiv`        | `tinyint(1)`  | YES  |     | `1`               |                                               |
+| `erstellt_am`      | `datetime`    | YES  |     | `CURRENT_TIMESTAMP`| `DEFAULT_GENERATED`                           |
+| `aktualisiert_am`  | `datetime`    | YES  |     | `CURRENT_TIMESTAMP`| `DEFAULT_GENERATED on update CURRENT_TIMESTAMP`|
+| `adresse_strasse`  | `text`        | YES  |     | `NULL`            |                                               |
+| `adresse_hausnummer`| `text`        | YES  |     | `NULL`            |                                               |
+| `adresse_plz`      | `text`        | YES  |     | `NULL`            |                                               |
+| `adresse_ort`      | `text`        | YES  |     | `NULL`            |                                               |
+| `firmenname`       | `text`        | YES  |     | `NULL`            |                                               |
+| `steuernummer`     | `text`        | YES  |     | `NULL`            |                                               | 
 4. Frontend- und Backend-Entwicklung
     • Frontend (Landing Page, Login, Registrierung): 
         ◦ Wird über den Nginx-Webserver bereitgestellt. 
