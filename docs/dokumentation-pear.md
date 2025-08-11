@@ -232,6 +232,83 @@ Pfad: raw/<uuid>.json
 
 Inhalt: Original-MIME-Daten (inkl. Header, Body, Anhänge). Aktuell liest die Projekte\PEARv2.2\pear_email_ingest_mvp_imap\imap_fetcher.py die Rohdaten aus. Vorher muss in der akutellen Testphase der Server über die main.py angesteuert werden. Die Fetcher holt dann alle Mails aus dem Postfach von postboy@pear-app.de roh ab, solange Anfrage, Kundendaten oder Klientendaten im Betreff steht (case insensitive). Dies ist in der env so hinterlegt (Keywords)
 
+5.2 Modul „bucket_to_gemini.py“ – Verarbeitung und Zusammenführung eingehender Kundendaten
+
+Ziel:
+Automatisierte Auswertung neu eingehender E-Mails aus dem GCS-Rohspeicher, Extraktion relevanter Kundendaten mittels Gemini-API, Zusammenführung mehrerer Teilinformationen aus unterschiedlichen E-Mails, und anschließende Speicherung bzw. Weiterverarbeitung.
+Zentrale Anforderung ist, dass Kundendaten nicht auf Basis einzelner E-Mails sofort als unvollständig markiert werden, sondern dass fehlende Felder erst nach einer sinnvollen Warte-/Sammelphase identifiziert und angefragt werden.
+
+Herausforderung:
+Frühere Implementierungen führten dazu, dass die Verarbeitung zu früh auslöste:
+
+Bereits vorhandene, aber noch nicht vollständig erfasste Kundensätze im Pending-Status wurden erneut als „fehlend“ interpretiert, wenn eine zweite E-Mail mit den restlichen Daten eintraf.
+
+Das führte dazu, dass der Vermittler unnötig mehrfach kontaktiert wurde, obwohl alle Daten in Summe über mehrere Mails vorlagen.
+
+Lösung & Ablauf im neuen Code:
+
+Trigger:
+
+Startet, sobald eine neue Datei im Bucket pear-email-inbox-raw-pearv2/raw/ gespeichert wird.
+
+Datei enthält eine komplette Roh-E-Mail als JSON (inkl. Header, Body, Anhänge).
+
+Parsing der Rohdaten:
+
+JSON wird eingelesen und MIME-Inhalt extrahiert.
+
+Body wird bereinigt (z. B. Entfernen von Signaturen, überflüssigen Leerzeilen).
+
+Nur relevante Textbestandteile werden an den Gemini-API-Aufruf übergeben.
+
+Gemini-gestützte Extraktion:
+
+Anfrage an Gemini-API mit Prompt zur strukturierten Extraktion von:
+
+Vollständigem Namen (Vor- & Nachname)
+
+Adresse (Straße, Hausnummer, PLZ, Ort, optional Zusatz)
+
+Kontaktinformationen (Telefon, E-Mail)
+
+Zusatzinformationen (z. B. besondere Hinweise, Betreuungsbeginn)
+
+Robuste Logik für Erkennung von getrennt aufgeführten Vor- und Nachnamen.
+
+Zusammenführungs-Logik (Pending-Handling):
+
+Prüft, ob es bereits einen Pending-Datensatz für diesen Kunden gibt (Match über E-Mail, Telefonnummer oder Name+Adresse).
+
+Falls ja: Neue Felder werden mit bestehenden Pending-Daten zusammengeführt.
+
+Felder, die schon vorhanden sind, werden nicht überschrieben, es sei denn, neue Werte sind plausibler bzw. vollständiger.
+
+Erst wenn nach definiertem Zeitfenster (z. B. X Stunden) immer noch Pflichtfelder fehlen, wird eine „fehlende Daten“-Benachrichtigung an den Vermittler gesendet.
+
+Speicherung:
+
+Vollständige Kundendaten werden direkt in tbl_kunden in der MySQL-Datenbank gespeichert.
+
+Unvollständige Datensätze verbleiben im Pending-Status (separate Tabelle oder Flag), bis sie vervollständigt sind oder als unvollständig markiert werden.
+
+Fehler- und Edge-Case-Handling:
+
+Mehrere Mails vom selben Vermittler mit identischem Inhalt werden erkannt (Hash-Vergleich), um doppelte Verarbeitungen zu vermeiden.
+
+Unterschiedliche Schreibweisen und Formatierungen (z. B. Telefonnummern mit/ohne Ländervorwahl) werden normalisiert.
+
+Logische Validierungen (PLZ-Länge, Telefonnummernformat, E-Mail-Syntax) vor Datenbankeintrag.
+
+Aktueller Status (11.08.2025):
+
+bucket_to_gemini.py implementiert und erfolgreich getestet.
+
+Zusammenführung von Teilinformationen aus mehreren Mails funktioniert zuverlässig.
+
+System verhindert unnötige Mehrfachanfragen an Vermittler.
+
+Nächste Schritte: Zeitfenster-Logik für ausstehende Pflichtfelder optimieren, automatisierte Tests mit mehreren realen E-Mail-Beispielen durchführen.
+
 6. Versionsmanagement & Deployment
     • Versionskontrolle: Git. 
     • Remote Repository: GitHub (Public HystDevTV/PEARv2). Zuvor gab es auch ein separates privates/öffentliches pear-frontend Repository. 
@@ -253,3 +330,16 @@ PEAR berücksichtigt umfassende nicht-funktionale Anforderungen.
 
 Das PEAR-Projekt wird weiterhin aktiv entwickelt. Der Strategiewechsel bei der E-Mail-Verarbeitung hin zu einer serverlosen Architektur und insbesondere die Etablierung einer automatisierten CI/CD-Pipeline mittels Google Cloud Build zur Behebung der Berechtigungsprobleme sind wesentliche Fortschritte, die auf einen klaren Plan zur Überwindung technischer Herausforderungen und zur Sicherstellung der zukünftigen Stabilität und Wartbarkeit hindeuten. Das Projekt ist auf einem guten Weg, seine ambitionierten Ziele der Digitalisierung der Pflegeverwaltung zu erreichen.
 
+## 📌 Projekt-Meilensteine – PEARv2.2 Email Ingest MVP
+
+| Datum        | Meilenstein | Beschreibung | Status |
+|--------------|-------------|--------------|--------|
+| 2025-07-??   | **Deployment von Cloudbuild-Trigger zum pushen von Commits zum Github Branch* nach ersten      Berechtigungsproblemen. ✅ Abgeschlossen
+| 2025-07-??   | **Umstieg von n8n auf GCP** | Entscheidung, die gesamte E-Mail-Verarbeitung in Google Cloud zu verlagern, um Latenz zu reduzieren und mehr Kontrolle über den Code zu haben. | ✅ Abgeschlossen |
+| 2025-07-??   | **MySQL auf VM installiert** | Nach Problemen mit PostgreSQL erfolgreiche Einrichtung von MySQL inkl. User-Rechten für den App-User. | ✅ Abgeschlossen |
+| 2025-08-??   | **.env-Konfiguration** | Einführung einer zentralen `.env`-Datei für alle sensiblen Variablen (DB, SMTP, GCP, Gemini) zur besseren Portabilität. | ✅ Abgeschlossen |
+| 2025-08-??   | **Gemini-Datenextraktion** | Erfolgreiche Integration der Gemini API zur Extraktion deutscher Kontaktdaten aus unstrukturierten E-Mails. | ✅ Abgeschlossen |
+| 2025-08-??   | **SMTP-Versand** | Voll funktionsfähiger Versand von Rückfragen und Bestätigungsmails über eigenen SMTP-Server. | ✅ Abgeschlossen |
+| 2025-08-??   | **Pending-Mechanismus** | Einführung des `/pending`-Ordners zur Speicherung unvollständiger Datensätze, bis alle Felder vorhanden sind. | ✅ Abgeschlossen |
+| 2025-08-??   | **Merge-Logik für Antworten** | Automatisches Zusammenführen von Nachlieferungen in Pending-Datensätzen, bis diese vollständig sind. | ✅ Abgeschlossen |
+| 2025-08-??   | **End-to-End Automatisierung** | Vollständiger Ablauf in zwei Schritten (Neue Mails → Pending-Antworten) – bereit für Cronjob oder Cloud Function. | ✅ Abgeschlossen |
