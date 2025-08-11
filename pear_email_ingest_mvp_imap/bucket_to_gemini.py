@@ -1,3 +1,4 @@
+
 """
 bucket_to_gemini.py — PEARv2.2
 RAW (E-Mails) → PENDING (Zwischenstände) → bei Vollständigkeit: DB + Bestätigung + PENDING löschen
@@ -36,35 +37,7 @@ from mysql.connector import Error
 # Immer die .env im Hauptprojekt-Ordner laden, egal von wo das Script gestartet wird
 ENV_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
 load_dotenv(dotenv_path=ENV_PATH, override=True)
-
-print(f"[DEBUG] ENV geladen aus: {ENV_PATH}")
-print("[DEBUG] DB_USER:", os.getenv("DB_USER"))
-print("[DEBUG] DB_PASSWORD:", os.getenv("DB_PASSWORD"))
-print("[DEBUG] DB_HOST:", os.getenv("DB_HOST"))
-print("[DEBUG] DB_NAME:", os.getenv("DB_NAME"))
-
-# ---------------- DB-Check -----------------
-def test_db_connection():
-    """Testet, ob eine Verbindung zur DB-Datenbank möglich ist."""
-    try:
-        conn = DB.connector.connect(
-            host=os.getenv("DB_HOST", "127.0.0.1"),
-            user=os.getenv("DB_USER"),
-            password=os.getenv("DB_PASSWORD"),
-            database=os.getenv("DB_NAME")
-        )
-        cursor = conn.cursor()
-        cursor.execute("SELECT 1;")
-        result = cursor.fetchone()
-        print(f"[DB-Check] Verbindung erfolgreich: {result}")
-        cursor.close()
-        conn.close()
-    except Error as e:
-        print(f"[DB-Check] Fehler: {e}")
-        exit(1)
-
-# Gleich beim Start prüfen
-test_db_connection()
+print(f"INFO: ENV geladen aus: {ENV_PATH}")
 
 # ---------------- ENV-Variablen laden ----------------
 PROJECT_ID      = os.getenv("PROJECT_ID", "pearv2")
@@ -85,19 +58,44 @@ SMTP_PASSWORD   = os.getenv("SMTP_PASSWORD")
 SMTP_FROM       = os.getenv("SMTP_FROM", "PEAR Ingest <noreply@pear-app.de>")
 SMTP_USE_SSL    = os.getenv("SMTP_USE_SSL", "false").lower() == "true"
 
-DB_HOST      = os.getenv("DB_HOST", "127.0.0.1")
-DB_PORT      = int(os.getenv("DB_PORT", "3306"))
-DB_USER      = os.getenv("DB_USER", "app_user")
-DB_PASSWORD  = os.getenv("DB_PASSWORD", "TempPass123!")
-DB_NAME      = os.getenv("DB_NAME", "pear_app_db")
+# DB-Variablen zentral laden
+DB_HOST         = os.getenv("DB_HOST")
+DB_PORT         = int(os.getenv("DB_PORT", "3306"))
+DB_USER         = os.getenv("DB_USER")
+DB_PASSWORD     = os.getenv("DB_PASSWORD")
+DB_NAME         = os.getenv("DB_NAME")
 
 REQ_FIELDS = [f.strip() for f in (os.getenv("REQUIRED_FIELDS") or
                                  "name,first_name,last_name,email,phone,address,plz,city").split(",") if f.strip()]
 
-CASE_TAG_RE = re.compile(r"\[PEAR-([0-9a-fA-F]{8})\]")
+CASE_TAG_RE = re.compile(r"[PEAR-([0-9a-fA-F]{8})]")
 
 if not GEMINI_API_KEY:
     raise RuntimeError("GEMINI_API_KEY fehlt – ohne API-Key keine Extraktion möglich.")
+
+# ---------------- DB-Check -----------------
+def test_db_connection():
+    """Testet, ob eine Verbindung zur MySQL-Datenbank möglich ist."""
+    if not all([DB_HOST, DB_USER, DB_PASSWORD, DB_NAME]):
+        print("INFO: DB-Variablen nicht vollständig in .env gesetzt. Überspringe DB-Operationen.")
+        return
+    try:
+        conn = mysql.connector.connect(
+            host=DB_HOST,
+            port=DB_PORT,
+            user=DB_USER,
+            password=DB_PASSWORD,
+            database=DB_NAME
+        )
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1;")
+        result = cursor.fetchone()
+        print(f"INFO: [DB-Check] Verbindung erfolgreich: {result}")
+        cursor.close()
+        conn.close()
+    except Error as e:
+        print(f"ERROR: [DB-Check] Fehler: {e}")
+        exit(1)
 
 # ---------------- Gemini Setup ----------------
 genai.configure(api_key=GEMINI_API_KEY)
@@ -130,7 +128,7 @@ def _html_to_text(html: str) -> str:
         return ""
     text = re.sub(r"(?is)<(script|style).*?>.*?</\\1>", "", html)
     text = re.sub(r"(?is)<br\\s*/?>", "\n", text)
-    text = re.sub(r"(?is)</p\\s*>", "\n\n", text)
+    text = re.sub(r"(?is)</p\\s*?>", "\n\n", text)
     text = re.sub(r"(?is)<.*?>", "", text)
     return re.sub(r"[ \t]+", " ", text).strip()
 
@@ -138,7 +136,7 @@ def _maybe_b64_decode(s: str) -> bytes:
     if not s:
         return b""
     s_stripped = s.strip()
-    if re.fullmatch(r"[A-Za-z0-9+/=\r\n]+", s_stripped) and len(s_stripped) % 4 == 0:
+    if re.fullmatch(r"[A-Za-z0-9+/=\\r\\n]+", s_stripped) and len(s_stripped) % 4 == 0:
         try:
             return base64.b64decode(s_stripped, validate=True)
         except Exception:
@@ -239,7 +237,7 @@ def call_gemini(email_body: str) -> Dict[str, Any]:
 
 def send_email(to_addr: Optional[str], subject: str, body: str) -> bool:
     if not (SMTP_HOST and SMTP_USER and SMTP_PASSWORD and SMTP_FROM and to_addr):
-        print("SMTP nicht konfiguriert oder Empfänger fehlt – Versand übersprungen.")
+        print("INFO: SMTP nicht konfiguriert oder Empfänger fehlt – Versand übersprungen.")
         return False
     msg = MIMEText(body, _charset="utf-8")
     msg["From"] = SMTP_FROM if "<" in SMTP_FROM else formataddr(("PEAR Ingest", SMTP_FROM))
@@ -258,7 +256,7 @@ def send_email(to_addr: Optional[str], subject: str, body: str) -> bool:
                 s.send_message(msg)
         return True
     except Exception as e:
-        print(f"SMTP-Fehler: {e}")
+        print(f"ERROR: SMTP-Fehler: {e}")
         return False
 
 def compose_reply(subject: str, missing: List[str]) -> tuple[str, str]:
@@ -358,58 +356,66 @@ def find_pending_by_sender(bucket: storage.Bucket, sender: Optional[str]) -> Opt
 
 def create_database_entry(data: Dict[str, Any], source_email: str, subject: str) -> bool:
     if not all([DB_HOST, DB_USER, DB_PASSWORD, DB_NAME]):
-        print("DB nicht konfiguriert – überspringe persistente Ablage (simuliere Erfolg).")
+        print("INFO: DB nicht konfiguriert – überspringe persistente Ablage (simuliere Erfolg).")
         return True
     try:
-        import mysql.connector
         conn = mysql.connector.connect(
             host=DB_HOST, port=DB_PORT,
             user=DB_USER, password=DB_PASSWORD, database=DB_NAME
         )
         cur = conn.cursor()
+        
+        # Die Adresse aus den Einzelteilen zusammensetzen
+        full_address = f"{(data.get('address') or '').strip()}, {(data.get('plz') or '').strip()} {(data.get('city') or '').strip()}".strip(", ")
+
+        # SQL-Statement mit korrekten Spaltennamen aus der Doku
         cur.execute("""
-            INSERT INTO tbl_kunden (name, email, phone, address, source_subject, source_from_email, raw_json)
+            INSERT INTO tbl_kunden (name_vollstaendig, kontakt_email, kontakt_telefon, adresse_strasse, source_subject, source_from_email, raw_json)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (
             data.get("name"),
             data.get("email"),
             data.get("phone"),
-            f"{(data.get('address') or '').strip()}, {(data.get('plz') or '').strip()} {(data.get('city') or '').strip()}".strip(", "),
+            full_address,
             subject,
             source_email,
             json.dumps(data, ensure_ascii=False)
         ))
         conn.commit()
         cid = cur.lastrowid
-        cur.close(); conn.close()
-        print(f"DB: tbl_kunden.id={cid}")
+        cur.close()
+        conn.close()
+        print(f"INFO: DB: tbl_kunden.id={cid}")
         return True
-    except Exception as e:
-        print(f"DB-Fehler: {e}")
+    except Error as e:
+        print(f"ERROR: DB-Fehler: {e}")
         return False
 
 def main():
+    # DB-Verbindung gleich am Anfang prüfen
+    test_db_connection()
+
     client = storage.Client(project=PROJECT_ID)
     bucket = client.bucket(GCS_BUCKET)
 
     files = list_candidates(client)
     if not files:
-        print("Keine neuen Dateien zum Verarbeiten gefunden.")
+        print("INFO: Keine neuen Dateien zum Verarbeiten gefunden.")
         return
 
-    print(f"Verarbeite {len(files)} Dateien...")
+    print(f"INFO: Verarbeite {len(files)} Dateien...")
     for raw_name in files:
         try:
             raw_text = bucket.blob(raw_name).download_as_text()
             raw = json.loads(raw_text)
         except Exception as e:
-            print(f"Fehler beim Laden/JSON-Parse von {raw_name}: {e}")
+            print(f"ERROR: Fehler beim Laden/JSON-Parse von {raw_name}: {e}")
             continue
 
         subject, from_addr, body = parse_raw_fields(raw)
 
         if not body.strip():
-            print(f"{raw_name}: Kein Body extrahierbar – überspringe.")
+            print(f"INFO: {raw_name}: Kein Body extrahierbar – überspringe.")
             continue
 
         extracted = call_gemini(body)
@@ -437,7 +443,7 @@ def main():
                 if send_email(from_addr, sub, body_mail):
                     mark_responded(bucket, raw_name)
                 bucket.blob(pending_path).delete()
-                print(f"Case {pending_doc['case_id']} abgeschlossen (DB gespeichert).")
+                print(f"INFO: Case {pending_doc['case_id']} abgeschlossen (DB gespeichert).")
             else:
                 pending_doc["extracted"] = merged
                 pending_doc.setdefault("history", []).append({"ts": _now(), "event": "PARTIAL_UPDATE"})
@@ -448,7 +454,7 @@ def main():
                 sub, body_mail = compose_reply(subject, merged["missing"])
                 if send_email(from_addr, sub, body_mail):
                     mark_responded(bucket, raw_name)
-                print(f"Case {pending_doc['case_id']} aktualisiert (fehlend: {merged['missing']}).")
+                print(f"INFO: Case {pending_doc['case_id']} aktualisiert (fehlend: {merged['missing']}).")
             continue
 
         case_id = str(uuid.uuid4())
@@ -460,14 +466,13 @@ def main():
             if send_email(from_addr, sub, body_mail):
                 mark_responded(bucket, raw_name)
             bucket.blob(path).delete()
-            print(f"Complete (sofort) angelegt und abgeschlossen: {case_id}")
+            print(f"INFO: Complete (sofort) angelegt und abgeschlossen: {case_id}")
         else:
             sub, body_mail = compose_reply(f"[PEAR-{case_id[:8]}] – {subject or ''}".strip(), extracted["missing"])
             if send_email(from_addr, sub, body_mail):
                 mark_responded(bucket, raw_name)
-            print(f"Pending angelegt: {case_id} (fehlend: {extracted['missing']})")
+            print(f"INFO: Pending angelegt: {case_id} (fehlend: {extracted['missing']})")
 
 
 if __name__ == "__main__":
     main()
-
