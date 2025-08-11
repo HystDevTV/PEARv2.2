@@ -217,7 +217,7 @@ Bucket: pear-email-inbox-raw-pearv2
 
 Pfad: raw/<uuid>.json
 
-Inhalt: Original-MIME-Daten (inkl. Header, Body, Anhänge).
+Inhalt: Original-MIME-Daten (inkl. Header, Body, Anhänge). Aktuell liest die Projekte\PEARv2.2\pear_email_ingest_mvp_imap\imap_fetcher.py die Rohdaten aus. Vorher muss in der akutellen Testphase der Server über die main.py angesteuert werden. Die Fetcher holt dann alle Mails aus dem Postfach von postboy@pear-app.de roh ab, solange Anfrage, Kundendaten oder Klientendaten im Betreff steht (case insensitive). Dies ist in der env so hinterlegt (Keywords)
 
 6. Versionsmanagement & Deployment
     • Versionskontrolle: Git. 
