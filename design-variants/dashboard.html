@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PEAR – Tagesdashboard</title>
+<style>
+  :root{
+    --pear-bg:#FBFAF5;          /* helles Creme */
+    --pear-surface:#F5F3EA;     /* Panel */
+    --pear-tint:#EFF7E2;        /* zarter Birnen-Schimmer */
+    --pear-accent:#79B14B;      /* Hauptgrün */
+    --pear-accent-dark:#5A9237; /* dunkleres Grün */
+    --text:#2B2B2B;             /* Lesetext */
+    --muted:#6D6D6D;            /* Sekundärtext */
+
+    --shadow-out: 10px 10px 20px rgba(0,0,0,.12), -10px -10px 22px rgba(255,255,255,.92);
+    --shadow-out-2: 12px 12px 24px rgba(0,0,0,.15), -12px -12px 24px rgba(255,255,255,.94);
+    --shadow-in: inset 10px 10px 20px rgba(0,0,0,.10), inset -10px -10px 20px rgba(255,255,255,.95);
+    --radius-xl: 22px;
+    --radius-lg: 18px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    background: var(--pear-bg); color: var(--text);
+    line-height:1.35;
+  }
+  .wrap{max-width:1200px; margin:0 auto; padding:24px}
+  .row{display:grid; gap:16px}
+  .row.cols-2{grid-template-columns:2fr 1.3fr}
+  .row.cols-4{grid-template-columns:repeat(4, minmax(0,1fr))}
+  @media (max-width: 980px){
+    .row.cols-2{grid-template-columns:1fr}
+    .row.cols-4{grid-template-columns:repeat(2,1fr)}
+  }
+
+  /* Neumorph Blocks */
+  .card{
+    background: linear-gradient(145deg, var(--pear-surface), var(--pear-bg));
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-out);
+    padding:16px;
+  }
+  .inset{ background: linear-gradient(145deg, var(--pear-tint), var(--pear-surface)); box-shadow: var(--shadow-in); border-radius: var(--radius-lg); }
+
+  /* Header */
+  .header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px }
+  .title{ font-weight:900; font-size:24px }
+  .subtitle{ color:var(--muted); font-size:14px }
+
+  /* Badges & Buttons */
+  .badge{ display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px; font-weight:700; font-size:12px; background:linear-gradient(145deg, var(--pear-tint), var(--pear-surface)); box-shadow:var(--shadow-out); }
+  .badge.ok{ color:#2E7D32 }
+  .badge.warn{ color:#B26A00 }
+  .btn{ display:inline-flex; align-items:center; gap:8px; border:none; cursor:pointer; padding:10px 16px; border-radius:999px; font-weight:800; color:var(--pear-accent-dark); background: linear-gradient(145deg, var(--pear-tint), var(--pear-surface)); box-shadow: var(--shadow-out); }
+  .btn:hover{ box-shadow: var(--shadow-out-2); transform: translateY(-1px) }
+  .btn.primary{ color:white; background: linear-gradient(145deg, var(--pear-accent), #8AD15D) }
+
+  /* KPI */
+  .kpi{ display:flex; align-items:center; justify-content:space-between }
+  .kpi .label{ color:var(--muted); font-size:13px }
+  .kpi .value{ font-size:24px; font-weight:900 }
+
+  /* Progress */
+  .progress{ height:16px; border-radius:999px }
+  .progress>.bar{ height:100%; border-radius:999px; background:linear-gradient(90deg, var(--pear-accent), #9adf66) }
+
+  /* Section */
+  .section-title{ display:flex; align-items:center; justify-content:space-between; margin:8px 0 }
+  .section-title .left{ display:flex; align-items:center; gap:10px }
+
+  /* Appointments */
+  .ap{ display:grid; grid-template-columns:100px 1fr auto; gap:14px; align-items:center }
+  .ap-time{ text-align:center; padding:12px 10px }
+  .ap-time .t{ font-size:22px; font-weight:900 }
+  .ap-time .d{ font-size:12px; color:var(--muted) }
+  .ap-meta{ display:flex; gap:14px; align-items:center; margin-top:6px; font-size:13px; color:var(--muted) }
+  .ap-actions{ display:flex; gap:8px }
+  @media (max-width: 720px){ .ap{ grid-template-columns:1fr } .ap-actions{ justify-content:flex-start } }
+
+  /* Automations */
+  .auto-row{ display:grid; grid-template-columns:1.3fr .8fr .8fr; gap:10px; align-items:center }
+  @media (max-width: 720px){ .auto-row{ grid-template-columns:1fr } }
+
+  /* Inbox */
+  .inbox-item{ display:grid; grid-template-columns:1fr auto; align-items:center; gap:12px; padding:10px 12px }
+
+  /* Tiny icons (inline SVG) */
+  .ic{ width:16px; height:16px; opacity:.9 }
+  /* Map & Navigation (pulled/convex look) */
+  .pulled{ position:relative; border-radius:32px; padding:12px;
+    background: radial-gradient(160% 140% at 50% 15%, #FFFFFF 0%, var(--pear-surface) 45%, #EEEBDD 100%);
+    box-shadow:
+      0 18px 28px rgba(0,0,0,.14),
+      0 8px 12px rgba(0,0,0,.06),
+      -8px -8px 16px rgba(255,255,255,.90);
+  }
+  .pulled::before{ content:""; position:absolute; inset:6px; border-radius:28px; pointer-events:none;
+    box-shadow:
+      inset -18px -18px 28px rgba(255,255,255,.85),
+      inset 18px 18px 28px rgba(0,0,0,.08);
+  }
+  .map{ position:relative; width:100%; height:300px; border-radius:24px; overflow:hidden;
+    background: linear-gradient(180deg, #f1f8e9, #eef5e5);
+    box-shadow: 0 10px 18px rgba(0,0,0,.10), -6px -6px 14px rgba(255,255,255,.80);
+  }
+  .map::after{ content:""; position:absolute; inset:0; pointer-events:none;
+    background:
+      radial-gradient(120% 90% at 50% 0%, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 40%),
+      radial-gradient(120% 90% at 50% 100%, rgba(0,0,0,.10) 0%, rgba(0,0,0,0) 55%),
+      radial-gradient(120% 120% at 0% 50%, rgba(255,255,255,.18) 0%, rgba(255,255,255,0) 40%),
+      radial-gradient(120% 120% at 100% 50%, rgba(0,0,0,.06) 0%, rgba(0,0,0,0) 40%);
+  }
+  .chipbar{ display:flex; gap:8px; flex-wrap:wrap }
+  .chip{ border:none; cursor:pointer; padding:8px 12px; border-radius:999px; font-weight:700; color:var(--pear-accent-dark); background:linear-gradient(145deg, var(--pear-tint), var(--pear-surface)); box-shadow:var(--shadow-out) }
+  .chip.active{ background:linear-gradient(145deg, var(--pear-accent), #8AD15D); color:#fff }
+  .log{ font-size:13px; color:var(--muted); max-height:220px; overflow:auto }
+  /* Brand / Logo */
+  .brand{ display:flex; justify-content:center; align-items:center; margin:6px 0 10px 0; }
+  .brand .logo-wrap{ display:inline-flex; align-items:center; justify-content:center; padding:10px 16px; border-radius:20px; background: linear-gradient(145deg, var(--pear-surface), var(--pear-bg)); box-shadow: var(--shadow-out); }
+  .brand img{ height:46px; width:auto; display:block; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- Brand Logo centered -->
+    <div class="brand">
+      <div class="logo-wrap">
+        <img id="pearLogo" src="images/Logo.png" alt="PEAR Logo" loading="eager" decoding="async" \/>
+      </div>
+    </div>
+    <!-- Header -->
+    <div class="header">
+      <div>
+        <div class="title">Guten Tag, Jan 👋</div>
+        <div class="subtitle" id="todayLine">2025-08-11 • Dein Tag mit PEAR</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px">
+        <span class="badge ok">🛡️ Guardian: NORMAL</span>
+        <button class="btn">📝 Neue Notiz</button>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="row cols-4">
+      <div class="card kpi"><div><div class="label">Klienten heute</div><div class="value" id="kpiClients">–</div></div><div class="inset" style="padding:8px">👥</div></div>
+      <div class="card kpi"><div><div class="label">Nächster Termin</div><div class="value" id="kpiNext">–</div></div><div class="inset" style="padding:8px">⏰</div></div>
+      <div class="card kpi"><div><div class="label">Fahrtzeit gesamt</div><div class="value" id="kpiDrive">–</div></div><div class="inset" style="padding:8px">🚗</div></div>
+      <div class="card kpi"><div><div class="label">✨KI‑Aufgaben</div><div class="value" id="kpiAuto">–</div></div><div class="inset" style="padding:8px">✨</div></div>
+    </div>
+
+    <!-- Day progress -->
+    <div class="card" style="margin-top:16px">
+      <div style="display:flex; justify-content:space-between; margin-bottom:8px; color:var(--muted); font-size:13px">
+        <span>Tag • Fortschritt</span>
+        <span id="progressPct">0%</span>
+      </div>
+      <div class="inset progress"><div class="bar" id="progressBar" style="width:0%"></div></div>
+    </div>
+
+    <!-- Map & Navigation Panel -->
+<div class="card" id="navPanel" style="margin-top:16px">
+  <div class="section-title">
+    <div class="left">
+      <div class="inset" style="padding:8px">🗺️</div>
+      <div style="font-weight:900">Karte & Navigation</div>
+    </div>
+    <span id="gmapsHint" class="badge warn" style="display:none">Google Maps nicht aktiv – API-Key setzen</span>
+  </div>
+  <div class="row" style="grid-template-columns:1.5fr 1fr">
+    <div class="pulled">
+      <div id="map" class="map"></div>
+    </div>
+    <div class="row">
+      <div class="card" style="padding:12px">
+        <div style="font-weight:800; margin-bottom:8px">Ziel & Fahrtart</div>
+        <select id="apSelect" class="inset" style="width:100%; padding:10px; border:none; outline:none"></select>
+        <div class="chipbar" style="margin-top:10px">
+          <button class="chip active" data-type="anfahrt">Anfahrt (zum Termin)</button>
+          <button class="chip" data-type="dienst">Dienstfahrt (für Klient)</button>
+          <button class="chip" data-type="privat">Privatfahrt</button>
+        </div>
+      </div>
+      <div class="card" style="display:flex; gap:8px; flex-wrap:wrap">
+        <button id="btnPreview" class=\"btn btn-route\" data-id=\"\${ap.id}\">🧭 Route anzeigen</button>
+        <button id="btnStartNav" class="btn primary">▶️ Navigation starten</button>
+        <button id="btnStopTrack" class="btn">⏹️ Tracking stoppen</button>
+      </div>
+      <div class="card" style="padding:12px">
+        <div style="font-weight:800; margin-bottom:6px">Sitzungsverlauf</div>
+        <div id="sessionLog" class="log"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row cols-2" style="margin-top:16px">
+      <!-- Left: Appointments -->
+      <div>
+        <div class="section-title">
+          <div class="left">
+            <div class="inset" style="padding:8px">📍</div>
+            <div style="font-weight:900">Deine Termine heute</div>
+          </div>
+          <a href="#" style="color:var(--pear-accent-dark); font-weight:700">Tagesplan öffnen</a>
+        </div>
+        <div class="row" id="appointments"></div>
+      </div>
+
+      <!-- Right: Automations + Inbox -->
+      <div class="row">
+        <div class="section-title">
+          <div class="left">
+            <div class="inset" style="padding:8px">▶️</div>
+            <div style="font-weight:900">Automatisierungen</div>
+          </div>
+        </div>
+        <div class="row" id="automations"></div>
+
+        <div class="section-title">
+          <div class="left">
+            <div class="inset" style="padding:8px">✉️</div>
+            <div style="font-weight:900">Aktuelle Mitteilungen</div>
+          </div>
+        </div>
+        <div class="card" id="inbox"></div>
+
+        <div class="row" style="grid-template-columns:1fr 1fr">
+          <button class="btn">📄 Doku öffnen</button>
+          <button class="btn primary">📞 Klienten anrufen</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="opacity:.6; text-align:center; margin-top:18px; font-size:12px">PEAR • Weniger Verwaltung, mehr Zeit für Menschen.</div>
+  </div>
+
+<script>
+  // Logo-Fallback: probiert mehrere Pfade/Schreibweisen
+  (function(){
+    const el = document.getElementById('pearLogo');
+    if (!el) return;
+    const candidates = [
+      'images/Logo.png',
+      'images/logo.png',
+      '/images/Logo.png',
+      '/images/logo.png',
+      'Logo.png',
+      'logo.png'
+    ];
+    let i = 0;
+    el.addEventListener('error', function handler(){
+      i++;
+      if (i < candidates.length) {
+        el.src = candidates[i];
+      } else {
+        el.removeEventListener('error', handler);
+        console.warn('PEAR Logo nicht gefunden. Bitte Pfad prüfen.');
+      }
+    });
+  })();
+
+  // --- Demo-Daten ---
+  const APPOINTMENTS = [
+    { id:"a1", time:"08:30", title:"Frau Schneider – Morgenpflege", address:"Lindenweg 12, 80331 München", durationMin:60, driveMin:14, phone:"+49 171 555 123", notes:"Katze im Haushalt – Bitte Tür schließen" },
+    { id:"a2", time:"10:15", title:"Herr Özdemir – Medikamentengabe", address:"Isarstraße 7, 80469 München", durationMin:30, driveMin:9, phone:"+49 89 123 456", notes:"Rezept liegt bereit (Apotheke Kramer)" },
+    { id:"a3", time:"12:00", title:"Frau Müller – Spaziergang & Einkauf", address:"Schlossallee 3, 80636 München", durationMin:90, driveMin:18, phone:"+49 176 77 22 991", notes:"Einkaufsliste im Chat" },
+    { id:"a4", time:"15:00", title:"Herr Wagner – Physiotherapie-Begleitung", address:"Therapiezentrum Ost, 80538 München", durationMin:60, driveMin:20, phone:"+49 151 6600 1020", notes:"Parkhaus Ebene -1, Ticket wird erstattet" },
+  ];
+  const AUTOMATIONS = [
+    { id:"auto1", label:"Rechnungsentwurf", status:"running", eta:"14:20", details:"4 von 12 Einsätzen erkannt" },
+    { id:"auto2", label:"Dokumentation Sync", status:"ok", eta:null, details:"Letzter Sync 08:02" },
+    { id:"auto3", label:"Klienten-Upload (DSGVO)", status:"queued", eta:"in 6 min", details:"2 Dateien warten" },
+    { id:"auto4", label:"Guardian Watch", status:"ok", eta:null, details:"Threat Level: NORMAL" },
+  ];
+  const INBOX = [
+    { id:"m1", from:"Pflegedienst Kramer", subject:"Rezept abgeholt", time:"09:48" },
+    { id:"m2", from:"Frau Müller", subject:"Einkaufsliste aktualisiert", time:"09:31" },
+    { id:"m3", from:"PEAR System", subject:"Rechnungsvorschau bereit", time:"08:57" },
+  ];
+
+  // --- Google Maps Integration (optional) ---
+// Setze optional vor Nutzung: window.__GMAPS_KEY = 'YOUR_API_KEY'
+let gmapsReady=false, map, directionsService, directionsRenderer, geocoder;
+let watchId=null, destLL=null; // {lat,lng}
+const DRIVE_TYPES={ ANFAHRT:'anfahrt', DIENST:'dienst', PRIVAT:'privat' };
+let currentDriveType=DRIVE_TYPES.ANFAHRT; // default
+let currentDrive=null; // {type, destId, arrived:boolean}
+let activeAppointmentId=null; // laufender Termin
+
+function loadGoogleMapsIfAvailable(){
+  const key = window.__GMAPS_KEY || null;
+  if(!key){ document.getElementById('gmapsHint').style.display='inline-flex'; return; }
+  const s = document.createElement('script');
+  s.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places`;
+  s.async = true; s.defer = true; s.onload = ()=>{ gmapsReady=true; initMap(); };
+  document.head.appendChild(s);
+}
+function initMap(){
+  if(!gmapsReady) return;
+  map = new google.maps.Map(document.getElementById('map'), { center:{lat:48.137154, lng:11.576124}, zoom:12, disableDefaultUI:false });
+  directionsService = new google.maps.DirectionsService();
+  directionsRenderer = new google.maps.DirectionsRenderer({ map });
+  geocoder = new google.maps.Geocoder();
+}
+function geocodeAddress(address){
+  return new Promise((resolve,reject)=>{
+    if(!gmapsReady) return reject('gmaps not ready');
+    geocoder.geocode({ address }, (res, status)=>{
+      if(status==='OK' && res[0]){ const loc=res[0].geometry.location; resolve({lat:loc.lat(), lng:loc.lng()}); } else reject(status);
+    });
+  });
+}
+function getCurrentPosition(){
+  return new Promise((resolve,reject)=>{
+    if(!('geolocation' in navigator)) return reject('geo not supported');
+    navigator.geolocation.getCurrentPosition(p=> resolve({lat:p.coords.latitude, lng:p.coords.longitude}), err=>reject(err), { enableHighAccuracy:true, timeout:15000 });
+  });
+}
+function showRouteTo(ap){
+  if(!gmapsReady){
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(ap.address)}&travelmode=driving`;
+    window.open(url, '_blank');
+    return;
+  }
+  Promise.all([getCurrentPosition(), geocodeAddress(ap.address)])
+    .then(([orig, dest])=>{
+      destLL = dest;
+      directionsService.route({ origin:orig, destination:dest, travelMode:'DRIVING' }, (res, status)=>{
+        if(status==='OK'){ directionsRenderer.setDirections(res); }
+      });
+    })
+    .catch(()=>{ const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(ap.address)}&travelmode=driving`; window.open(url,'_blank'); });
+}
+function startNavigationTo(ap){
+  currentDrive = { type: currentDriveType, destId: ap.id, arrived:false, startedAt: Date.now() };
+  if(activeAppointmentId && activeAppointmentId!==ap.id && currentDrive.type===DRIVE_TYPES.ANFAHRT){ endAppointment(activeAppointmentId); }
+  const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(ap.address)}&travelmode=driving`;
+  window.open(url, '_blank');
+  startTracking(ap);
+}
+function startTracking(ap){
+  appendLog('drive_start', `${labelDriveType(currentDrive.type)} → ${ap.title}`);
+  if(watchId) navigator.geolocation.clearWatch(watchId);
+  watchId = navigator.geolocation.watchPosition(pos=> handlePosition(ap, pos.coords.latitude, pos.coords.longitude), err=> appendLog('geo_error', err.message), { enableHighAccuracy:true, maximumAge:10000, timeout:15000 });
+}
+function stopTracking(){ if(watchId){ navigator.geolocation.clearWatch(watchId); watchId=null; appendLog('drive_stop','Tracking gestoppt'); } }
+function labelDriveType(t){ return t===DRIVE_TYPES.ANFAHRT? 'Anfahrt' : t===DRIVE_TYPES.DIENST? 'Dienstfahrt' : 'Privatfahrt'; }
+function handlePosition(ap, lat, lng){
+  if(destLL){ const d = haversineMeters(lat,lng,destLL.lat,destLL.lng); if(d<=120 && currentDrive && !currentDrive.arrived){ currentDrive.arrived=true; appendLog('arrived', `Ankunft bei ${ap.title} (${Math.round(d)} m)`); if(currentDrive.type===DRIVE_TYPES.ANFAHRT){ startAppointment(ap.id); } } }
+}
+function startAppointment(apId){ activeAppointmentId = apId; appendLog('appointment_start', `Termin gestartet: ${getAp(apId).title}`); }
+function endAppointment(apId){ appendLog('appointment_end', `Termin beendet: ${getAp(apId).title}`); if(activeAppointmentId===apId) activeAppointmentId=null; }
+function getAp(id){ return APPOINTMENTS.find(a=> a.id===id); }
+function haversineMeters(lat1, lon1, lat2, lon2){ const R=6371000, toRad=(v)=>v*Math.PI/180; const dLat=toRad(lat2-lat1), dLon=toRad(lon2-lon1); const a=Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2; const c=2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)); return R*c; }
+function appendLog(type, msg){ const el=document.getElementById('sessionLog'); const ts=new Date().toLocaleTimeString(); const line=document.createElement('div'); line.innerHTML = `<b>${ts}</b> • <span style="opacity:.8">${type}</span> – ${msg}`; el.prepend(line); try{ const arr=JSON.parse(localStorage.getItem('pearSessionLog')||'[]'); arr.unshift({ts, type, msg}); localStorage.setItem('pearSessionLog', JSON.stringify(arr).slice(0,2000)); }catch{} }
+
+function initNavPanel(){
+  const sel=document.getElementById('apSelect'); sel.innerHTML = APPOINTMENTS.map(a=> `<option value="${a.id}">${a.time} – ${a.title}</option>`).join('');
+  document.querySelectorAll('#navPanel .chip').forEach(ch=> ch.addEventListener('click', ()=>{
+    document.querySelectorAll('#navPanel .chip').forEach(x=> x.classList.remove('active'));
+    ch.classList.add('active');
+    currentDriveType = ch.dataset.type;
+  }));
+  document.getElementById('btnPreview').addEventListener('click', ()=>{ const ap=getAp(sel.value); showRouteTo(ap); });
+  document.getElementById('btnStartNav').addEventListener('click', ()=>{ const ap=getAp(sel.value); startNavigationTo(ap); });
+  document.getElementById('btnStopTrack').addEventListener('click', stopTracking);
+}
+
+// --- Utilities ---
+  const todayISO = new Date().toISOString().slice(0,10);
+  document.getElementById('todayLine').textContent = `${todayISO} • Dein Tag mit PEAR`;
+  function minutesSinceStart(t){ const [h,m]=t.split(':').map(Number); return h*60+m; }
+  function dayProgress(){ const start=6*60, end=20*60, now=new Date(); const cur=now.getHours()*60+now.getMinutes(); return Math.min(100, Math.max(0, ((cur-start)/(end-start))*100)); }
+
+  // --- KPIs ---
+  const totalDrive = APPOINTMENTS.reduce((s,a)=> s+a.driveMin,0);
+  const nowMin = new Date().getHours()*60+new Date().getMinutes();
+  const nextAp = APPOINTMENTS.find(a=> minutesSinceStart(a.time)>=nowMin) || APPOINTMENTS[APPOINTMENTS.length-1];
+  document.getElementById('kpiClients').textContent = APPOINTMENTS.length;
+  document.getElementById('kpiNext').textContent = `${nextAp.time}`;
+  document.getElementById('kpiDrive').textContent = `${totalDrive} min`;
+  document.getElementById('kpiAuto').textContent = `${AUTOMATIONS.length}`;
+
+  function renderProgress(){ const p = Math.round(dayProgress()); document.getElementById('progressPct').textContent = p+"%"; document.getElementById('progressBar').style.width = p+"%"; }
+  renderProgress(); setInterval(renderProgress, 30000);
+  // Init Map & Panel
+  initNavPanel();
+  loadGoogleMapsIfAvailable();
+
+  // --- Appointments ---
+  const apRoot = document.getElementById('appointments');
+  APPOINTMENTS.forEach(ap=>{
+    const wrap = document.createElement('div');
+    wrap.className = 'card ap';
+    wrap.innerHTML = `
+      <div class="inset ap-time"><div class="t">${ap.time}</div><div class="d">+${ap.durationMin} min</div></div>
+      <div>
+        <div style="font-weight:900; margin-bottom:4px">${ap.title}</div>
+        <div style="color:var(--muted); font-size:13px">📍 ${ap.address}</div>
+        <div class="ap-meta">
+          <span class="badge">🚗 Fahrt ${ap.driveMin} min</span>
+          <span class="badge">📞 ${ap.phone}</span>
+        </div>
+      </div>
+      <div class="ap-actions">
+        <button class=\"btn btn-route\" data-id=\"\${ap.id}\">🧭 Route</button>
+        <button class=\"btn primary btn-start\" data-id=\"\${ap.id}\">▶️ Starten</button>
+      </div>
+    `;
+    apRoot.appendChild(wrap);
+  });
+
+  // Wire appointment action buttons to nav panel
+  document.querySelectorAll('.btn-route').forEach(b=> b.addEventListener('click', (e)=>{ const id=e.currentTarget.getAttribute('data-id'); document.getElementById('apSelect').value=id; showRouteTo(getAp(id)); window.scrollTo({top: document.getElementById('navPanel').offsetTop-8, behavior:'smooth'}); }));
+  document.querySelectorAll('.btn-start').forEach(b=> b.addEventListener('click', (e)=>{ const id=e.currentTarget.getAttribute('data-id'); document.getElementById('apSelect').value=id; startNavigationTo(getAp(id)); window.scrollTo({top: document.getElementById('navPanel').offsetTop-8, behavior:'smooth'}); }));
+
+// --- Automations ---
+  const autoRoot = document.getElementById('automations');
+  AUTOMATIONS.forEach(a=>{
+    const row = document.createElement('div');
+    row.className = 'card auto-row';
+    const eta = a.eta ? `<span class="badge warn">⏱️ ETA ${a.eta}</span>` : `<span class="badge ok">✔️ OK</span>`;
+    row.innerHTML = `
+      <div style="display:flex; align-items:center; gap:10px"><div class="inset" style="padding:8px">📄</div><div style="font-weight:700">${a.label}</div><span style="opacity:.7">${a.details}</span></div>
+      <div>${eta}</div>
+      <div style="display:flex; justify-content:flex-end"><button class="btn">Öffnen</button></div>
+    `;
+    autoRoot.appendChild(row);
+  });
+
+  // --- Inbox ---
+  const inbox = document.getElementById('inbox');
+  INBOX.forEach((m,i)=>{
+    const item = document.createElement('div');
+    item.className = 'inset inbox-item';
+    item.style.borderRadius = '14px';
+    item.style.marginBottom = (i<INBOX.length-1? '8px':'0');
+    item.innerHTML = `
+      <div><div style="font-weight:700">${m.from}</div><div style="font-size:13px; color:var(--muted)">${m.subject}</div></div>
+      <div style="display:flex; align-items:center; gap:8px"><span style="font-size:12px; color:var(--muted)">${m.time}</span> ➜ </div>
+    `;
+    inbox.appendChild(item);
+  });
+</script>
+</body>
+</html>
