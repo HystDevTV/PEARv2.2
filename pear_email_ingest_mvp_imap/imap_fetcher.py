@@ -12,7 +12,7 @@ IMAP_USER = os.getenv("IMAP_USER")
 IMAP_PASSWORD = os.getenv("IMAP_PASSWORD")
 USE_SSL = os.getenv("IMAP_USE_SSL", "true").lower() == "true"
 INGEST_URL = os.getenv("INGEST_URL", "http://localhost:8080/ingest")
-SUBJECT_KEYWORDS = [s.strip().lower() for s in os.getenv("SUBJECT_KEYWORDS","").split(",") if s.strip()]
+SUBJECT_KEYWORDS = [s.strip().lower() for s in os.getenv("SUBJECT_KEYWORDS", "").split(",") if s.strip()]
 
 def subject_matches(subject: str) -> bool:
     if not SUBJECT_KEYWORDS:
@@ -45,8 +45,8 @@ def main():
             continue
         msg = email.message_from_bytes(msg_data[0][1])
         subject = msg.get('Subject', '')
-        from_email = email.utils.parseaddr(msg.get('From'))[1]
-        to_email = email.utils.parseaddr(msg.get('To'))[1]
+        from_email = email.utils.parseaddr(msg.get('From'))[1] or msg.get('From', '')
+        to_email = email.utils.parseaddr(msg.get('To'))[1] or msg.get('To', '')
 
         if not subject_matches(subject):
             print(f"Skip (subject): {subject}")
@@ -67,8 +67,8 @@ def main():
 
         payload = {
             "subject": subject,
-            "from_email": from_email,
-            "to_email": to_email,
+            "from_email": from_email.strip(),
+            "to_email": to_email.strip(),
             "body": body_text
         }
         try:

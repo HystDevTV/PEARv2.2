@@ -1,4 +1,4 @@
-PEAR – Professionelle Einsatz-, Abrechnungs- und Ressourcenverwaltung Aktueller Projektdokumentation Stand: 24. Juli 2025 Autor: HystDevTV (Jan Philip Egerton Steinert) Gesamt-App Version (aktueller Stand): 0.1.1 Frontend Version: 0.1.1 (Versioniert über package.json) Backend Version: 0.0.0 (noch in Entwicklung/Initialisierung)
+PEAR – Professionelle Einsatz-, Abrechnungs- und Ressourcenverwaltung Aktueller Projektdokumentation Stand: 11.08.2025 Autor: HystDevTV (Jan Philip Egerton Steinert) Gesamt-App Version (aktueller Stand): 0.1.1 Frontend Version: 0.1.1 (Versioniert über package.json) Backend Version: 0.1.2 (noch in Entwicklung/Initialisierung)
 
 1. Einleitung und Projektüberblick
 PEAR ist eine umfassende Webanwendung, die darauf abzielt, die administrativen Aufgaben von Alltagsbegleitern in der Seniorenpflege zu digitalisieren und zu automatisieren. Das Kernziel ist es, die tägliche Routine zu erleichtern, Zeit für die direkte Klientenbetreuung zu schaffen und die Datenverwaltung zu zentralisieren und abzusichern. Die Motivation hinter PEAR umfasst die Reduktion von administrativem Stress, Fehlervermeidung, Zeitersparnis, Verbesserung der Kommunikation sowie die Erhöhung der Datenqualität und -sicherheit. Die Anwendung ist darauf ausgelegt, Funktionen wie Terminlegung, Kundenverwaltung, Routenplanung, Stundenerfassung, Dokumentation und Buchhaltung inklusive Rechnungserstellung, Versand und Ablage zu automatisieren. Dabei hat die DSGVO-Konformität oberste Priorität.
@@ -183,6 +183,42 @@ Die E-Mail-Verarbeitung ist ein zentraler Aspekt für die automatisierte Kundena
             ▪ Developer Connect Read Token Accessor und Secure Source Manager Repository Reader: Für den Zugriff auf das GitHub-Repository. 
             ▪ Zusätzlich sollte der Benutzer, der den Service Account verwaltet, die Rolle Dienstkontonutzer (roles/iam.serviceAccountUser) auf diesem Service Account haben. 
         ◦ Dieses Vorgehen bietet Vorteile in Bezug auf Sicherheit, Nachvollziehbarkeit und Skalierbarkeit, indem nur die explizit benötigten Rechte zugewiesen werden. 
+
+    5.1 Modul „E-Mail-Ingest“ (IMAP → GCS Rohspeicher)
+Stand: 11.08.2025
+
+Ziel: Automatisierte Abholung eingehender E-Mails mit potenziellen Kundendaten und Speicherung als Rohdaten im Google Cloud Storage (GCS).
+Eine Verarbeitung oder Extraktion erfolgt nicht in diesem Schritt, sondern später durch den Gemini-Parser.
+
+Funktionsweise
+Verbindung zum IMAP-Server
+
+Host: server7.rainbow-web.com
+Port: 993 (SSL)
+Zugangsdaten aus .env geladen (IMAP_USER, IMAP_PASSWORD).
+Filterung relevanter E-Mails
+Es werden nur E-Mails verarbeitet, deren Betreff mindestens eines der folgenden Schlüsselwörter enthält:
+„Kundendaten“
+„Kunden“
+„Klientendaten“
+Groß-/Kleinschreibung wird ignoriert.
+
+Alle anderen E-Mails werden übersprungen.
+
+Abruf neuer Nachrichten
+
+Nur ungelesene Nachrichten (UNSEEN) werden berücksichtigt.
+
+Die vollständige MIME-Message wird als Rohstring im JSON-Format gespeichert.
+
+Speicherung im GCS-Bucket
+
+Bucket: pear-email-inbox-raw-pearv2
+
+Pfad: raw/<uuid>.json
+
+Inhalt: Original-MIME-Daten (inkl. Header, Body, Anhänge).
+
 6. Versionsmanagement & Deployment
     • Versionskontrolle: Git. 
     • Remote Repository: GitHub (Public HystDevTV/PEARv2). Zuvor gab es auch ein separates privates/öffentliches pear-frontend Repository. 
