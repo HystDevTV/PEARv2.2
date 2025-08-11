@@ -1,0 +1,16 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Dependencies installieren
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# App-Code kopieren
+COPY . .
+
+# Port exposieren
+EXPOSE 8000
+
+# Entwicklungsmodus mit Auto-Reload
+CMD ["uvicorn", "backend_app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

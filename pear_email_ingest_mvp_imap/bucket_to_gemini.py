@@ -68,7 +68,7 @@ DB_NAME         = os.getenv("DB_NAME")
 REQ_FIELDS = [f.strip() for f in (os.getenv("REQUIRED_FIELDS") or
                                  "name,first_name,last_name,email,phone,address,plz,city").split(",") if f.strip()]
 
-CASE_TAG_RE = re.compile(r"[PEAR-([0-9a-fA-F]{8})]")
+CASE_TAG_RE = re.compile(r"PEAR-([0-9a-fA-F]{8})")
 
 if not GEMINI_API_KEY:
     raise RuntimeError("GEMINI_API_KEY fehlt – ohne API-Key keine Extraktion möglich.")

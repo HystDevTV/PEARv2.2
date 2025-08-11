@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  # MySQL Development Database
+  mysql-dev:
+    image: mysql:8.0
+    container_name: pear-mysql-dev
+    ports:
+      - "3307:3306"  # Anderer Port um VM-DB nicht zu stören
+    environment:
+      MYSQL_ROOT_PASSWORD: DevRootPass123!
+      MYSQL_DATABASE: pear_app_db
+      MYSQL_USER: app_user
+      MYSQL_PASSWORD: TempPass123!
+    volumes:
+      - mysql_dev_data:/var/lib/mysql
+      - ./docker-schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    networks:
+      - pear-dev-network
+    restart: unless-stopped
+
+  # FastAPI Backend
+  backend-dev:
+    build:
+      context: ./pear-backend
+      dockerfile: Dockerfile.dev
+    container_name: pear-backend-dev
+    ports:
+      - "8001:8000"  # Anderer Port um VM-Backend nicht zu stören
+    environment:
+      - DB_HOST=mysql-dev
+      - DB_PORT=3306
+      - DB_USER=app_user
+      - DB_PASSWORD=TempPass123!
+      - DB_NAME=pear_app_db
+    depends_on:
+      - mysql-dev
+    volumes:
+      - ./pear-backend:/app
+    networks:
+      - pear-dev-network
+    restart: unless-stopped
+
+  # Email Ingest Service
+  email-ingest-dev:
+    build:
+      context: ./pear_email_ingest_mvp_imap
+      dockerfile: Dockerfile.dev
+    container_name: pear-email-ingest-dev
+    environment:
+      - DB_HOST=mysql-dev
+      - DB_PORT=3306
+      - DB_USER=app_user
+      - DB_PASSWORD=TempPass123!
+      - DB_NAME=pear_app_db
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    depends_on:
+      - mysql-dev
+    volumes:
+      - ./pear_email_ingest_mvp_imap:/app
+    networks:
+      - pear-dev-network
+
+  # phpMyAdmin für Database Management
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: pear-phpmyadmin-dev
+    ports:
+      - "8080:80"
+    environment:
+      - PMA_HOST=mysql-dev
+      - PMA_PORT=3306
+      - PMA_USER=app_user
+      - PMA_PASSWORD=TempPass123!
+    depends_on:
+      - mysql-dev
+    networks:
+      - pear-dev-network
+
+volumes:
+  mysql_dev_data:
+
+networks:
+  pear-dev-network:
+    driver: bridge
