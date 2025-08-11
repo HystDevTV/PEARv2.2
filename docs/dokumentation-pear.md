@@ -2,6 +2,19 @@ PEAR – Professionelle Einsatz-, Abrechnungs- und Ressourcenverwaltung Aktuelle
 
 1. Einleitung und Projektüberblick
 PEAR ist eine umfassende Webanwendung, die darauf abzielt, die administrativen Aufgaben von Alltagsbegleitern in der Seniorenpflege zu digitalisieren und zu automatisieren. Das Kernziel ist es, die tägliche Routine zu erleichtern, Zeit für die direkte Klientenbetreuung zu schaffen und die Datenverwaltung zu zentralisieren und abzusichern. Die Motivation hinter PEAR umfasst die Reduktion von administrativem Stress, Fehlervermeidung, Zeitersparnis, Verbesserung der Kommunikation sowie die Erhöhung der Datenqualität und -sicherheit. Die Anwendung ist darauf ausgelegt, Funktionen wie Terminlegung, Kundenverwaltung, Routenplanung, Stundenerfassung, Dokumentation und Buchhaltung inklusive Rechnungserstellung, Versand und Ablage zu automatisieren. Dabei hat die DSGVO-Konformität oberste Priorität.
+
+## Entstehungsgeschichte
+Die Idee für PEAR entstand aus einem persönlichen Bedürfnis:  
+Meine Freundin Silvia arbeitet als Alltagsbegleiterin, oft unter hohem Stress und mit wenig professioneller Organisation. Neben der Arbeit mit Kunden musste sie an Wochenenden noch viele Schreib- und Verwaltungsaufgaben erledigen.  
+
+Um ihr mehr Zeit und eine bessere Organisation zu ermöglichen, begann die Entwicklung dieser App.  
+
+Als wir merkten, dass die Ideen und die erste Umsetzung sehr gut waren, stellte Silvia fest, dass man *"damit sicher gutes Geld verdienen"* könne, da es so etwas in diesem Umfang noch nicht gäbe.  
+
+Da ich für Silvia den Kosenamen **"Birne"** habe, war der Name **PEAR** schnell gefunden – und steht heute für „Professionelle Einsatz-, Abrechnungs- und Ressourcenverwaltung“.  
+Auch wenn er ohne Hintergrundwissen etwas sperrig wirken mag, passte er einfach zu gut.
+
+
 2. Zielgruppe & Stakeholder
     • Primärnutzer: Alltagsbegleiter in der Seniorenpflege. 
     • Sekundärnutzer: Verwaltungspersonal (Büroleitung, Buchhaltung). 
