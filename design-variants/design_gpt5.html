@@ -1,0 +1,307 @@
+import React, {useMemo, useState, useEffect} from "react";
+import { motion } from "framer-motion";
+import { CalendarDays, MapPin, Clock, Navigation, Phone, FileText, CheckCircle2, AlertTriangle, PlayCircle, PauseCircle, ShieldCheck, Mail, MessageSquare, ChevronRight, Car, Users, Sandwich } from "lucide-react";
+
+/**
+ * PEAR – Soft Neumorph Frontend Dashboard (single-file)
+ * ----------------------------------------------------
+ * - Helles, birnen-inspiriertes Soft-UI mit dezenten, aber sichtbaren Neumorph-Schatten
+ * - Fokus: Tagesüberblick für Alltagsbegleiterinnen (Termine, Fahrtzeiten, Auto-Aufgaben)
+ * - Keine externen Styles nötig – alles inlined / Tailwind utility classes + inline shadows
+ * - Produktionsreif als Startscreen; Daten kommen aktuell aus Fake-Store
+ */
+
+// Helper: Soft-UI Shadow Presets
+const soft = {
+  card: {
+    boxShadow:
+      "10px 10px 20px rgba(0,0,0,0.12), -10px -10px 22px rgba(255,255,255,0.92)",
+    borderRadius: 20,
+    background: "linear-gradient(145deg, #F5F3EA, #FBFAF5)",
+  },
+  inset: {
+    boxShadow:
+      "inset 10px 10px 20px rgba(0,0,0,0.10), inset -10px -10px 20px rgba(255,255,255,0.95)",
+    borderRadius: 16,
+    background: "linear-gradient(145deg, #EFF7E2, #F5F3EA)",
+  },
+  button: {
+    boxShadow:
+      "9px 9px 18px rgba(0,0,0,0.12), -9px -9px 18px rgba(255,255,255,0.96)",
+    borderRadius: 9999,
+    background: "linear-gradient(145deg, #EFF7E2, #F6F3EA)",
+  },
+};
+
+const palette = {
+  bg: "#FBFAF5",
+  surface: "#F5F3EA",
+  tint: "#EFF7E2",
+  accent: "#79B14B",
+  accentDark: "#5A9237",
+  text: "#2B2B2B",
+  muted: "#6D6D6D",
+  ok: "#2E7D32",
+  warn: "#B26A00",
+  err: "#B00020",
+};
+
+// Fake data for demo
+const now = new Date();
+const todayISO = now.toISOString().slice(0,10);
+
+const APPOINTMENTS = [
+  {
+    id: "a1",
+    time: "08:30",
+    title: "Frau Schneider – Morgenpflege",
+    address: "Lindenweg 12, 80331 München",
+    durationMin: 60,
+    driveMin: 14,
+    phone: "+49 171 555 123",
+    notes: "Katze im Haushalt – bitte Tür schließen",
+  },
+  {
+    id: "a2",
+    time: "10:15",
+    title: "Herr Özdemir – Medikamentengabe",
+    address: "Isarstraße 7, 80469 München",
+    durationMin: 30,
+    driveMin: 9,
+    phone: "+49 89 123 456",
+    notes: "Rezept liegt bereit (Apotheke Kramer)",
+  },
+  {
+    id: "a3",
+    time: "12:00",
+    title: "Frau Müller – Spaziergang & Einkauf",
+    address: "Schlossallee 3, 80636 München",
+    durationMin: 90,
+    driveMin: 18,
+    phone: "+49 176 77 22 991",
+    notes: "Einkaufsliste im Chat",
+  },
+  {
+    id: "a4",
+    time: "15:00",
+    title: "Herr Wagner – Physiotherapie-Begleitung",
+    address: "Therapiezentrum Ost, 80538 München",
+    durationMin: 60,
+    driveMin: 20,
+    phone: "+49 151 6600 1020",
+    notes: "Parkhaus Ebene -1, Ticket wird erstattet",
+  },
+];
+
+const AUTOMATIONS = [
+  { id: "auto1", label: "Rechnungsentwurf", status: "running", eta: "14:20", details: "4 von 12 Einsätzen erkannt" },
+  { id: "auto2", label: "Dokumentation Sync", status: "ok", eta: null, details: "Letzter Sync 08:02" },
+  { id: "auto3", label: "Klienten-Upload (DSGVO)", status: "queued", eta: "in 6 min", details: "2 Dateien warten" },
+  { id: "auto4", label: "Guardian Watch", status: "ok", eta: null, details: "Threat Level: NORMAL" },
+];
+
+const INBOX = [
+  { id: "m1", from: "Pflegedienst Kramer", subject: "Rezept abgeholt", time: "09:48" },
+  { id: "m2", from: "Frau Müller", subject: "Einkaufsliste aktualisiert", time: "09:31" },
+  { id: "m3", from: "PEAR System", subject: "Rechnungsvorschau bereit", time: "08:57" },
+];
+
+function minutesSinceStart(t24) {
+  const [h, m] = t24.split(":").map(Number);
+  return h * 60 + m;
+}
+
+function getDayProgress() {
+  const start = 6 * 60; // 06:00
+  const end = 20 * 60; // 20:00
+  const current = now.getHours() * 60 + now.getMinutes();
+  return Math.min(100, Math.max(0, ((current - start) / (end - start)) * 100));
+}
+
+function Badge({children, tone = "muted"}:{children: React.ReactNode; tone?: "ok"|"warn"|"err"|"muted"}){
+  const color = tone === "ok" ? palette.ok : tone === "warn" ? palette.warn : tone === "err" ? palette.err : palette.muted;
+  return (
+    <span style={{
+      ...soft.button,
+      padding: "6px 12px",
+      fontWeight: 700,
+      fontSize: 12,
+      color,
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 6,
+    }}>
+      {children}
+    </span>
+  );
+}
+
+function KPI({icon:Icon, label, value, sub}:{icon:any; label:string; value:string; sub?:string}){
+  return (
+    <motion.div initial={{opacity:0, y:10}} animate={{opacity:1, y:0}} transition={{duration:.25}} style={{...soft.card, padding: 18}}>
+      <div style={{display:"flex", alignItems:"center", justifyContent:"space-between"}}>
+        <div style={{display:"flex", alignItems:"center", gap:10}}>
+          <div style={{...soft.inset, padding:8}}>
+            <Icon size={18} color={palette.accentDark} />
+          </div>
+          <div style={{fontSize:13, color: palette.muted}}>{label}</div>
+        </div>
+        <div style={{fontSize:24, fontWeight:800, color: palette.text}}>{value}</div>
+      </div>
+      {sub && <div style={{marginTop:6, fontSize:12, color: palette.muted}}>{sub}</div>}
+    </motion.div>
+  );
+}
+
+function AutomationRow({a}:{a:any}){
+  const map:any = { ok: {icon: <CheckCircle2 size={16}/>, tone: "ok"}, running: {icon: <PlayCircle size={16}/>, tone: "muted"}, queued: {icon: <PauseCircle size={16}/>, tone: "warn"} };
+  const m = map[a.status] || map.ok;
+  return (
+    <div style={{display:"grid", gridTemplateColumns:"1.3fr .7fr 1fr", gap:10, alignItems:"center", padding:"10px 12px", borderRadius:12, ...soft.card}}>
+      <div style={{display:"flex", alignItems:"center", gap:10}}>
+        <div style={{...soft.inset, padding:8}}><FileText size={16} color={palette.accentDark}/></div>
+        <div style={{fontWeight:700}}>{a.label}</div>
+        <span style={{opacity:.7}}>{a.details}</span>
+      </div>
+      <div>{a.eta ? <Badge tone="warn">⏱ ETA {a.eta}</Badge> : <Badge tone={m.tone as any}>{m.icon} OK</Badge>}</div>
+      <div style={{display:"flex", justifyContent:"flex-end"}}>
+        <button style={{...soft.button, padding:"8px 14px", color: palette.accentDark, fontWeight:700}}>Öffnen</button>
+      </div>
+    </div>
+  );
+}
+
+function AppointmentCard({ap}:{ap:any}){
+  return (
+    <motion.div initial={{opacity:0, y:8}} animate={{opacity:1, y:0}} transition={{duration:.2}} style={{...soft.card, padding:16}}>
+      <div style={{display:"grid", gridTemplateColumns:"90px 1fr auto", gap:14, alignItems:"center"}}>
+        <div style={{...soft.inset, padding:"12px 10px", textAlign:"center"}}>
+          <div style={{fontSize:22, fontWeight:900, color: palette.text}}>{ap.time}</div>
+          <div style={{fontSize:12, color: palette.muted}}>+{ap.durationMin} min</div>
+        </div>
+        <div>
+          <div style={{fontWeight:800, marginBottom:4}}>{ap.title}</div>
+          <div style={{display:"flex", gap:10, alignItems:"center", color: palette.muted, fontSize:13}}>
+            <MapPin size={14}/><span>{ap.address}</span>
+          </div>
+          <div style={{display:"flex", gap:14, alignItems:"center", marginTop:6, fontSize:13}}>
+            <Badge tone="muted"><Car size={14}/> Fahrt {ap.driveMin} min</Badge>
+            <Badge tone="muted"><Phone size={14}/> {ap.phone}</Badge>
+          </div>
+        </div>
+        <div style={{display:"flex", gap:8}}>
+          <button style={{...soft.button, padding:"10px 14px", color: palette.accentDark, fontWeight:700}}><Navigation size={16}/> Route</button>
+          <button style={{...soft.button, padding:"10px 14px", color: "white", background: `linear-gradient(145deg, ${palette.accent}, #8ACC5E)`}}>Starten</button>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+export default function PearDashboard(){
+  const [progress, setProgress] = useState(getDayProgress());
+
+  useEffect(()=>{
+    const t = setInterval(()=> setProgress(getDayProgress()), 30000);
+    return ()=> clearInterval(t);
+  },[]);
+
+  const totalDrive = useMemo(()=> APPOINTMENTS.reduce((s,a)=> s+a.driveMin,0),[]);
+  const nextAp = useMemo(()=>{
+    const minsNow = now.getHours()*60+now.getMinutes();
+    return APPOINTMENTS.find(a=> minutesSinceStart(a.time) >= minsNow) || APPOINTMENTS[APPOINTMENTS.length-1];
+  },[]);
+
+  return (
+    <div style={{minHeight:"100vh", background: palette.bg, color: palette.text, padding: 24, fontFamily: "ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto"}}>
+
+      {/* Header */}
+      <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16}}>
+        <div style={{display:"flex", alignItems:"center", gap:14}}>
+          <div style={{...soft.inset, padding:10}}><CalendarDays size={18} color={palette.accentDark}/></div>
+          <div>
+            <div style={{fontWeight:900, fontSize:22}}>Guten Tag, Jan 👋</div>
+            <div style={{color: palette.muted}}>{todayISO} • Dein Tag mit PEAR</div>
+          </div>
+        </div>
+        <div style={{display:"flex", alignItems:"center", gap:10}}>
+          <Badge tone="ok"><ShieldCheck size={14}/> Guardian: NORMAL</Badge>
+          <button style={{...soft.button, padding:"10px 16px", color: palette.accentDark, fontWeight:800}}>Neue Notiz</button>
+        </div>
+      </div>
+
+      {/* KPIs */}
+      <div style={{display:"grid", gridTemplateColumns:"repeat(4, minmax(0,1fr))", gap:14}}>
+        <KPI icon={Users} label="Klienten heute" value={String(APPOINTMENTS.length)} sub="inkl. Begleitungen" />
+        <KPI icon={Clock} label="Nächster Termin" value={`${nextAp.time}`} sub={nextAp.title} />
+        <KPI icon={Car} label="Fahrtzeit gesamt" value={`${totalDrive} min`} sub="geschätzt • ohne Verkehr" />
+        <KPI icon={FileText} label="Auto-Aufgaben" value={`${AUTOMATIONS.length}`} sub="Pear erledigt im Hintergrund" />
+      </div>
+
+      {/* Progress Bar Day */}
+      <div style={{marginTop:16, ...soft.card, padding:16}}>
+        <div style={{display:"flex", justifyContent:"space-between", marginBottom:8, color: palette.muted, fontSize:13}}>
+          <span>Tag • Fortschritt</span>
+          <span>{Math.round(progress)}%</span>
+        </div>
+        <div style={{height:16, borderRadius:999, ...soft.inset}}>
+          <div style={{height:"100%", width:`${progress}%`, borderRadius:999, background:`linear-gradient(90deg, ${palette.accent}, #9adf66)`}}/>
+        </div>
+      </div>
+
+      <div style={{display:"grid", gridTemplateColumns:"2fr 1.3fr", gap:16, marginTop:16}}>
+        {/* Left: Appointments timeline */}
+        <div>
+          <SectionTitle icon={<Navigation size={16} color={palette.accentDark}/>} title="Deine Termine heute" action={<a href="#" style={{color: palette.accentDark, fontWeight:700}}>Tagesplan öffnen</a>} />
+          <div style={{display:"grid", gap:12}}>
+            {APPOINTMENTS.map(ap=> <AppointmentCard key={ap.id} ap={ap} />)}
+          </div>
+        </div>
+
+        {/* Right: Automations + Inbox */}
+        <div style={{display:"grid", gap:16}}>
+          <SectionTitle icon={<PlayCircle size={16} color={palette.accentDark}/>} title="Automatisierungen" />
+          <div style={{display:"grid", gap:10}}>
+            {AUTOMATIONS.map(a=> <AutomationRow key={a.id} a={a} />)}
+          </div>
+
+          <SectionTitle icon={<Mail size={16} color={palette.accentDark}/>} title="Aktuelle Mitteilungen" />
+          <div style={{...soft.card, padding:12}}>
+            {INBOX.map(m=> (
+              <div key={m.id} style={{display:"grid", gridTemplateColumns:"1fr auto", alignItems:"center", padding:"10px 12px", borderRadius:12, ...(m.id!==INBOX[INBOX.length-1].id ? {marginBottom:8}:{}), ...soft.inset}}>
+                <div>
+                  <div style={{fontWeight:700}}>{m.from}</div>
+                  <div style={{fontSize:13, color: palette.muted}}>{m.subject}</div>
+                </div>
+                <div style={{display:"flex", alignItems:"center", gap:8}}>
+                  <span style={{fontSize:12, color: palette.muted}}>{m.time}</span>
+                  <ChevronRight size={16} color={palette.accentDark}/>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:12}}>
+            <button style={{...soft.button, padding:"12px 16px", color: palette.accentDark, fontWeight:800}}><FileText size={16}/> Doku öffnen</button>
+            <button style={{...soft.button, padding:"12px 16px", color: "white", background: `linear-gradient(145deg, ${palette.accent}, #8ACC5E)`}}><MessageSquare size={16}/> Klienten anrufen</button>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer note */}
+      <div style={{opacity:.6, textAlign:"center", marginTop:18, fontSize:12}}>PEAR • Weniger Verwaltung, mehr Zeit für Menschen.</div>
+    </div>
+  );
+}
+
+function SectionTitle({icon, title, action}:{icon:any; title:string; action?: React.ReactNode}){
+  return (
+    <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8}}>
+      <div style={{display:"flex", alignItems:"center", gap:10}}>
+        <div style={{...soft.inset, padding:8}}>{icon}</div>
+        <div style={{fontWeight:900, letterSpacing:.2}}>{title}</div>
+      </div>
+      {action}
+    </div>
+  );
+}
