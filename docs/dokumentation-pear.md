@@ -345,6 +345,21 @@ Nach nur einem Monat Entwicklung haben wir den **ursprünglich geplanten Contain
 - ✅ **UTF-8 E-Mail-Decoding** für deutsche Sonderzeichen
 - ✅ **Robuste Fehlerbehandlung** bei Gemini API-Ausfällen
 
+#### **🛡️ MEGA-GUARDIAN Security System:**
+
+<div align="center">
+<img src="../images/mega security.png" alt="MEGA-GUARDIAN Security System" width="150"/>
+<br/>
+<strong>Enterprise-Level DOS Protection</strong>
+</div>
+
+- ✅ **Email Volume Monitoring** - Verhindert Bombing-Angriffe (Max 10/Min, 100/Stunde)
+- ✅ **Suspicious Pattern Detection** - Erkennt ungewöhnliche Absender-Aktivitäten  
+- ✅ **Emergency Lockdown System** - Automatische Sperrung bei kritischen Bedrohungen
+- ✅ **Cost Attack Prevention** - Schutz vor Gemini API & SMTP Spam
+- ✅ **Auto Recovery** - Intelligente Entsperrung nach Cooldown-Phase
+- ✅ **Real-time Threat Analysis** - Kontinuierliche Bedrohungsüberwachung
+
 #### **Container-Infrastructure:**
 ```
 🐳 Docker Container Stack (PRODUCTION-READY)

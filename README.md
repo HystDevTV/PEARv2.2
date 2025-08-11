@@ -80,6 +80,20 @@ PEAR v2.2 ist ein vollständig automatisiertes E-Mail-Verarbeitungssystem für P
 - **Background Processing**: 5-Minuten Timer im Flask-System
 - **Logging**: Comprehensive Emoji-basierte Logs 📝
 
+### 🕵️‍♂️ **Guardian Security System** ← **NEW TODAY!**
+
+<div align="center">
+<img src="images/mega security.png" alt="MEGA-GUARDIAN Security System" width="200"/>
+<br/>
+<strong>MEGA-GUARDIAN: Enterprise Security Feature</strong>
+</div>
+- **Volume Monitoring**: Max 10 E-Mails/Min, 100/Stunde
+- **DOS Attack Protection**: Automatische Bedrohungserkennung
+- **Suspicious Pattern Detection**: Multi-Sender-Analyse
+- **Emergency Lockdown**: Auto-Sperrung bei kritischen Angriffen
+- **Cost Protection**: Verhindert API/SMTP-Bombing
+- **Auto Recovery**: Selbst-Entsperrung nach Cooldown-Phase
+
 ### 🐳 **Container Infrastructure**
 - **Docker Compose**: Komplette Entwicklungsumgebung
 - **Database Schema**: Versionierte SQL-Schemata  
