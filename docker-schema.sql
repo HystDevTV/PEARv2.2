@@ -123,6 +123,39 @@ CREATE TABLE IF NOT EXISTS tbl_email_processing (
     processed_at TIMESTAMP NULL
 );
 
+-- Tabelle für Pending Onboarding Data
+CREATE TABLE IF NOT EXISTS tbl_onboarding_pending (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    case_id VARCHAR(36) NOT NULL UNIQUE,
+    case_tag VARCHAR(8) NOT NULL,
+    
+    -- Kundendaten (werden sukzessive gefüllt)
+    name_vollstaendig VARCHAR(255),
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    kontakt_telefon VARCHAR(50),
+    kontakt_email VARCHAR(255),
+    adresse_strasse VARCHAR(255),
+    adresse_hausnummer VARCHAR(50),
+    adresse_plz VARCHAR(20),
+    adresse_ort VARCHAR(255),
+    
+    -- Metadaten
+    source_sender VARCHAR(255),
+    source_subject TEXT,
+    raw_data JSON,
+    status VARCHAR(50) DEFAULT 'PENDING',
+    
+    -- Timestamps
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    completed_at DATETIME NULL,
+    
+    INDEX idx_case_tag (case_tag),
+    INDEX idx_status (status),
+    INDEX idx_sender (source_sender)
+);
+
 -- Test-Daten einfügen
 INSERT IGNORE INTO tbl_begleiter (name_vollstaendig, kontakt_email, passwort_hash, rolle) VALUES 
 ('Test Begleiter', 'test@pear-app.de', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewB.TGKNgTQBQQ3.', 'Begleiter');

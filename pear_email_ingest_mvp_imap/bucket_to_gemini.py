@@ -102,13 +102,41 @@ genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel(GEMINI_MODEL)
 
 BASE_INSTR = (
-    "Extrahiere aus folgendem deutschsprachigem E-Mail-Text Kundendaten.\n"
-    f"Gib ausschließlich gültiges JSON mit Feldern zurück: {', '.join(REQ_FIELDS)}, confidence, missing.\n"
-    "Regeln:\n"
-    "- Trage Felder nur ein, wenn sie im Text eindeutig vorkommen.\n"
-    "- Fehlende/unklare Felder: null und in 'missing' auflisten.\n"
-    "- confidence = 1.0 NUR wenn 'missing' leer ist, sonst < 1.0.\n\n"
-    "E-Mail-Text:\n{email_body}\n"
+    "Du bist ein Experte für die Extraktion deutscher Kundendaten aus E-Mails von Pflegevermittlungen.\n"
+    "Extrahiere ALLE verfügbaren Informationen aus dem E-Mail-Text und strukturiere sie.\n\n"
+    
+    "AUSGABE-FORMAT: Nur gültiges JSON mit folgenden Feldern:\n"
+    f"{', '.join(REQ_FIELDS)}, confidence, missing\n\n"
+    
+    "EXTRAKTIONS-REGELN:\n"
+    "• NAME: Erkenne Vor- und Nachname, auch bei getrennter Angabe (Vorname: Hans, Nachname: Schmidt → name: 'Hans Schmidt')\n"
+    "• TELEFON: Alle deutschen Formats: 030-123, 0221/456, +49 89 123, (089) 456-789\n"
+    "• EMAIL: Standard E-Mail-Adressen\n"
+    "• ADRESSE: Straße + Hausnummer, auch bei getrennter Angabe (Kastanienallee | 68 → address: 'Kastanienallee 68')\n"
+    "• PLZ: 5-stellige deutsche PLZ (12345)\n"
+    "• STADT: Ortsname (Berlin, München, Hamburg, etc.)\n\n"
+    
+    "DEUTSCHE KONTEXT-HINWEISE:\n"
+    "• 'Anbei die Daten der Kundin/des Kunden' = Kundendatenübermittlung\n"
+    "• 'Begleitung vereinbart' = Pflegekontext\n"
+    "• Tabellen-Format erkennen: | Name | Tel | Email | Straße | Nr | PLZ | Stadt |\n"
+    "• Mehrzeilige Adressen: 'Rosenweg 12\\n10115 Berlin' → address: 'Rosenweg 12', plz: '10115', city: 'Berlin'\n\n"
+    
+    "BEISPIELE:\n"
+    "Input: 'Hans Schmidt | 089-123456 | hans@mail.de | Hauptstr. 15 | 80331 München'\n"
+    "Output: {{\"name\":\"Hans Schmidt\",\"phone\":\"089-123456\",\"email\":\"hans@mail.de\",\"address\":\"Hauptstr. 15\",\"plz\":\"80331\",\"city\":\"München\"}}\n\n"
+    
+    "Input: 'Vorname: Maria\\nNachname: Weber\\nTelefon: 069-555\\nAdresse:\\nLindenstr. 8\\n60311 Frankfurt'\n"
+    "Output: {{\"name\":\"Maria Weber\",\"phone\":\"069-555\",\"address\":\"Lindenstr. 8\",\"plz\":\"60311\",\"city\":\"Frankfurt\"}}\n\n"
+    
+    "WICHTIG:\n"
+    "- Nur eindeutige Daten extrahieren, keine Vermutungen\n"
+    "- Fehlende Felder: null setzen und in 'missing' Array auflisten\n"
+    "- confidence: 1.0 nur wenn missing-Array leer, sonst 0.8-0.95\n"
+    "- Bei Tabellenformat: Spalten korrekt zuordnen\n\n"
+    
+    "ANALYSE FOLGENDEN E-MAIL-TEXT:\n{email_body}\n\n"
+    "JSON-AUSGABE:"
 )
 
 # ---------------- Helper-Funktionen ----------------
@@ -293,22 +321,43 @@ def mark_responded(bucket: storage.Bucket, raw_name: str):
     marker = RESP_PREFIX + raw_name.split("/")[-1].replace(".json", ".sent")
     bucket.blob(marker).upload_from_string("", content_type="text/plain")
 
-def save_pending(bucket: storage.Bucket, case_id: str, raw_name: str, subject: str,
-                 from_email: Optional[str], extracted: dict) -> str:
-    doc = {
-        "case_id": case_id,
-        "case_tag": case_id[:8],  # Kurzes Case-Tag für E-Mail-Referenz
-        "state": "PENDING_MISSING",
-        "source_raw": f"gs://{GCS_BUCKET}/{raw_name}",
-        "subject": subject,
-        "from_email": from_email,
-        "extracted": extracted,
-        "history": [{"ts": _now(), "event": "CREATED"}],
-        "expires_at": (datetime.utcnow() + timedelta(days=14)).isoformat(timespec="seconds") + "Z",
-    }
-    path = f"{PENDING_PREFIX}{case_id}.json"
-    bucket.blob(path).upload_from_string(json.dumps(doc, ensure_ascii=False, indent=2), content_type="application/json")
-    return path
+def save_pending_to_db(case_id: str, raw_name: str, subject: str, from_email: str, extracted: dict) -> bool:
+    """Speichert Pending-Case in DB-Tabelle statt Bucket"""
+    if not all([DB_HOST, DB_USER, DB_PASSWORD, DB_NAME]):
+        print("INFO: DB nicht konfiguriert – überspringe Pending-Speicherung.")
+        return False
+    
+    try:
+        conn = mysql.connector.connect(
+            host=DB_HOST, port=DB_PORT,
+            user=DB_USER, password=DB_PASSWORD, database=DB_NAME
+        )
+        cur = conn.cursor()
+        
+        case_tag = case_id[:8]
+        raw_data = json.dumps(extracted, ensure_ascii=False)
+        
+        cur.execute("""
+            INSERT INTO tbl_onboarding_pending (
+                case_id, case_tag, name_vollstaendig, first_name, last_name,
+                kontakt_telefon, kontakt_email, adresse_strasse, adresse_hausnummer,
+                adresse_plz, adresse_ort, source_sender, source_subject, raw_data, status
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'PENDING')
+        """, (
+            case_id, case_tag, extracted.get("name"), extracted.get("first_name"), 
+            extracted.get("last_name"), extracted.get("phone"), extracted.get("email"),
+            extracted.get("address"), extracted.get("housenumber"), extracted.get("plz"),
+            extracted.get("city"), from_email, subject, raw_data
+        ))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True
+        
+    except Exception as e:
+        print(f"ERROR: DB-Fehler beim Speichern von Pending-Case: {e}")
+        return False
 
 def merge_missing(old: dict, new: dict) -> dict:
     merged = dict(old or {})
@@ -345,27 +394,159 @@ def extract_name_from_email(email: str) -> Optional[str]:
     # Mindestens 2 Wörter für Vor- und Nachname
     return name if len(name.split()) >= 2 else None
 
-def find_pending_by_sender(bucket: storage.Bucket, sender: Optional[str]) -> Optional[str]:
-    if not sender:
+def find_pending_by_case_tag(case_tag: str) -> Optional[dict]:
+    """Sucht Pending-Case anhand Case-Tag in DB"""
+    if not case_tag or not all([DB_HOST, DB_USER, DB_PASSWORD, DB_NAME]):
         return None
-    newest: tuple[Optional[str], Optional[datetime]] = (None, None)
-    for p in bucket.list_blobs(prefix=PENDING_PREFIX):
-        if not p.name.endswith(".json"):
-            continue
-        try:
-            doc = json.loads(p.download_as_text())
-        except Exception:
-            continue
-        if (doc.get("from_email") or "").lower() != sender.lower():
-            continue
-        ts = (doc.get("history") or [{}])[-1].get("ts") or doc.get("expires_at")
-        try:
-            t = datetime.fromisoformat(ts.replace("Z", "+00:00")) if ts else None
-        except Exception:
-            t = None
-        if newest[1] is None or (t and t > newest[1]):
-            newest = (p.name, t)
-    return newest[0]
+    
+    try:
+        conn = mysql.connector.connect(
+            host=DB_HOST, port=DB_PORT,
+            user=DB_USER, password=DB_PASSWORD, database=DB_NAME
+        )
+        cur = conn.cursor(dictionary=True)
+        
+        cur.execute("SELECT * FROM tbl_onboarding_pending WHERE case_tag = %s AND status = 'PENDING'", (case_tag,))
+        result = cur.fetchone()
+        
+        cur.close()
+        conn.close()
+        return result
+        
+    except Exception as e:
+        print(f"ERROR: DB-Fehler beim Case-Tag-Matching: {e}")
+        return None
+
+def find_pending_by_sender(sender: str) -> Optional[dict]:
+    """Sucht neuesten Pending-Case anhand Sender in DB"""
+    if not sender or not all([DB_HOST, DB_USER, DB_PASSWORD, DB_NAME]):
+        return None
+    
+    try:
+        conn = mysql.connector.connect(
+            host=DB_HOST, port=DB_PORT,
+            user=DB_USER, password=DB_PASSWORD, database=DB_NAME
+        )
+        cur = conn.cursor(dictionary=True)
+        
+        cur.execute("""
+            SELECT * FROM tbl_onboarding_pending 
+            WHERE source_sender = %s AND status = 'PENDING'
+            ORDER BY updated_at DESC LIMIT 1
+        """, (sender,))
+        result = cur.fetchone()
+        
+        cur.close()
+        conn.close()
+        return result
+        
+    except Exception as e:
+        print(f"ERROR: DB-Fehler beim Sender-Matching: {e}")
+        return None
+
+def find_pending_by_name(name: str) -> Optional[dict]:
+    """Sucht Pending-Case anhand Name in DB"""
+    if not name or not all([DB_HOST, DB_USER, DB_PASSWORD, DB_NAME]):
+        return None
+    
+    try:
+        conn = mysql.connector.connect(
+            host=DB_HOST, port=DB_PORT,
+            user=DB_USER, password=DB_PASSWORD, database=DB_NAME
+        )
+        cur = conn.cursor(dictionary=True)
+        
+        cur.execute("""
+            SELECT * FROM tbl_onboarding_pending 
+            WHERE (name_vollstaendig LIKE %s OR CONCAT(first_name, ' ', last_name) LIKE %s)
+            AND status = 'PENDING'
+            ORDER BY updated_at DESC LIMIT 1
+        """, (f"%{name}%", f"%{name}%"))
+        result = cur.fetchone()
+        
+        cur.close()
+        conn.close()
+        return result
+        
+    except Exception as e:
+        print(f"ERROR: DB-Fehler beim Name-Matching: {e}")
+        return None
+
+def update_pending_case(case_id: str, new_data: dict) -> bool:
+    """Aktualisiert einen Pending-Case mit neuen Daten (inkrementell)"""
+    if not case_id or not all([DB_HOST, DB_USER, DB_PASSWORD, DB_NAME]):
+        return False
+    
+    try:
+        conn = mysql.connector.connect(
+            host=DB_HOST, port=DB_PORT,
+            user=DB_USER, password=DB_PASSWORD, database=DB_NAME
+        )
+        cur = conn.cursor()
+        
+        # Baue UPDATE-Statement dynamisch basierend auf verfügbaren Daten
+        updates = []
+        values = []
+        
+        field_mapping = {
+            "name": "name_vollstaendig",
+            "first_name": "first_name", 
+            "last_name": "last_name",
+            "phone": "kontakt_telefon",
+            "email": "kontakt_email",
+            "address": "adresse_strasse",
+            "housenumber": "adresse_hausnummer", 
+            "plz": "adresse_plz",
+            "city": "adresse_ort"
+        }
+        
+        for key, db_field in field_mapping.items():
+            if new_data.get(key) and str(new_data[key]).strip():
+                updates.append(f"{db_field} = %s")
+                values.append(new_data[key])
+        
+        if not updates:
+            return False
+        
+        # Aktualisiere raw_data mit merged data
+        updates.append("raw_data = %s")
+        values.append(json.dumps(new_data, ensure_ascii=False))
+        values.append(case_id)
+        
+        sql = f"UPDATE tbl_onboarding_pending SET {', '.join(updates)} WHERE case_id = %s"
+        cur.execute(sql, values)
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True
+        
+    except Exception as e:
+        print(f"ERROR: DB-Fehler beim Update von Pending-Case: {e}")
+        return False
+
+def complete_pending_case(case_id: str) -> bool:
+    """Löscht einen abgeschlossenen Pending-Case"""
+    if not case_id or not all([DB_HOST, DB_USER, DB_PASSWORD, DB_NAME]):
+        return False
+    
+    try:
+        conn = mysql.connector.connect(
+            host=DB_HOST, port=DB_PORT,
+            user=DB_USER, password=DB_PASSWORD, database=DB_NAME
+        )
+        cur = conn.cursor()
+        
+        cur.execute("DELETE FROM tbl_onboarding_pending WHERE case_id = %s", (case_id,))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True
+        
+    except Exception as e:
+        print(f"ERROR: DB-Fehler beim Löschen von Pending-Case: {e}")
+        return False
 
 def create_database_entry(data: Dict[str, Any], source_email: str, subject: str) -> bool:
     if not all([DB_HOST, DB_USER, DB_PASSWORD, DB_NAME]):
@@ -432,101 +613,81 @@ def main():
             continue
 
         extracted = call_gemini(body)
+        
+        if not extracted:
+            print(f"ERROR: Gemini-Extraktion fehlgeschlagen für {raw_name}")
+            continue
 
         case_short = find_case_id_in_subject_or_body(subject, body)
-        pending_path = None
+        pending_case = None
 
         print(f"DEBUG: Subject='{subject}', case_short='{case_short}'")
 
+        # Ebene 1: Case-Tag-Matching
         if case_short:
-            # Suche nach Case-Tag in Pending-Dateien
-            for p in bucket.list_blobs(prefix=PENDING_PREFIX):
-                try:
-                    pending_doc = json.loads(p.download_as_text())
-                    stored_case_tag = pending_doc.get("case_tag", "")
-                    print(f"DEBUG: Checking pending {p.name}: stored_case_tag='{stored_case_tag}'")
-                    if stored_case_tag.lower() == case_short.lower():
-                        print(f"DEBUG: MATCH! Using pending {p.name}")
-                        pending_path = p.name
-                        break
-                except Exception:
-                    # Fallback für alte Dateien ohne case_tag
-                    cid = p.name.split("/")[-1].replace(".json", "")
-                    if cid[:8].lower() == case_short.lower():
-                        pending_path = p.name
-                        break
+            pending_case = find_pending_by_case_tag(case_short)
+            if pending_case:
+                print(f"DEBUG: Found pending by case-tag: {pending_case['case_id']}")
 
-        if not pending_path:
-            print(f"DEBUG: No case-tag match, falling back to sender matching for {from_addr}")
-            pending_path = find_pending_by_sender(bucket, from_addr)
-            if pending_path:
-                print(f"DEBUG: Found pending by sender: {pending_path}")
+        # Ebene 2: Sender-Matching  
+        if not pending_case:
+            print(f"DEBUG: No case-tag match, trying sender matching for {from_addr}")
+            pending_case = find_pending_by_sender(from_addr)
+            if pending_case:
+                print(f"DEBUG: Found pending by sender: {pending_case['case_id']}")
 
-        # Dritte Matching-Ebene: Name-in-E-Mail-Matching
-        if not pending_path:
+        # Ebene 3: Name-Matching
+        if not pending_case:
             extracted_name = extracted.get("name", "").strip()
             email_name = extract_name_from_email(from_addr)
             print(f"DEBUG: Trying name matching - extracted: '{extracted_name}', from email: '{email_name}'")
             
-            if extracted_name or email_name:
-                for p in bucket.list_blobs(prefix=PENDING_PREFIX):
-                    try:
-                        pending_doc = json.loads(p.download_as_text())
-                        pending_name = pending_doc.get("extracted", {}).get("name", "").strip()
-                        
-                        # Match über extrahierten Namen oder E-Mail-Namen
-                        name_match = False
-                        if extracted_name and pending_name:
-                            name_match = extracted_name.lower() == pending_name.lower()
-                        elif email_name and pending_name:
-                            name_match = email_name.lower() == pending_name.lower()
-                        elif extracted_name and email_name:
-                            # Beide Namen aus aktueller E-Mail - prüfe gegen alle Pending
-                            name_match = extracted_name.lower() == email_name.lower()
-                            
-                        if name_match:
-                            print(f"DEBUG: Found pending by name matching: {p.name}")
-                            pending_path = p.name
-                            break
-                    except Exception:
-                        continue
+            if extracted_name:
+                pending_case = find_pending_by_name(extracted_name)
+                if pending_case:
+                    print(f"DEBUG: Found pending by name matching: {pending_case['case_id']}")
+            elif email_name:
+                pending_case = find_pending_by_name(email_name) 
+                if pending_case:
+                    print(f"DEBUG: Found pending by email-name matching: {pending_case['case_id']}")
 
-        if pending_path:
-            pending_doc = json.loads(bucket.blob(pending_path).download_as_text())
-            merged = merge_missing(pending_doc.get("extracted"), extracted)
-
+        if pending_case:
+            # Bestehenden Case aktualisieren
+            old_data = json.loads(pending_case.get("raw_data", "{}")) if pending_case.get("raw_data") else {}
+            merged = merge_missing(old_data, extracted)
+            
             if is_complete(merged, REQ_FIELDS):
+                # Case vervollständigen
                 ok = create_database_entry(merged, from_addr, subject)
+                complete_pending_case(pending_case["case_id"])
                 sub, body_mail = compose_reply(subject, [])
                 if send_email(from_addr, sub, body_mail):
                     mark_responded(bucket, raw_name)
-                bucket.blob(pending_path).delete()
-                print(f"INFO: Case {pending_doc['case_id']} abgeschlossen (DB gespeichert).")
+                print(f"INFO: Case {pending_case['case_id']} abgeschlossen (DB gespeichert).")
             else:
-                pending_doc["extracted"] = merged
-                pending_doc.setdefault("history", []).append({"ts": _now(), "event": "PARTIAL_UPDATE"})
-                bucket.blob(pending_path).upload_from_string(
-                    json.dumps(pending_doc, ensure_ascii=False, indent=2),
-                    content_type="application/json"
-                )
-                sub, body_mail = compose_reply(subject, merged["missing"])
+                # Partielles Update
+                update_pending_case(pending_case["case_id"], merged)
+                sub, body_mail = compose_reply(f"[PEAR-{pending_case['case_tag']}] – {subject or ''}".strip(), merged["missing"])
                 if send_email(from_addr, sub, body_mail):
                     mark_responded(bucket, raw_name)
-                print(f"INFO: Case {pending_doc['case_id']} aktualisiert (fehlend: {merged['missing']}).")
+                print(f"INFO: Case {pending_case['case_id']} aktualisiert (fehlend: {merged['missing']}).")
             continue
 
+        # Neuen Case erstellen
         case_id = str(uuid.uuid4())
-        path = save_pending(bucket, case_id, raw_name, subject, from_addr, extracted)
-
+        
         if is_complete(extracted, REQ_FIELDS):
+            # Vollständiger Case - direkt in Kundentabelle
             ok = create_database_entry(extracted, from_addr, subject)
             sub, body_mail = compose_reply(subject, [])
             if send_email(from_addr, sub, body_mail):
                 mark_responded(bucket, raw_name)
-            bucket.blob(path).delete()
             print(f"INFO: Complete (sofort) angelegt und abgeschlossen: {case_id}")
         else:
-            sub, body_mail = compose_reply(f"[PEAR-{case_id[:8]}] – {subject or ''}".strip(), extracted["missing"])
+            # Unvollständiger Case - in Pending-Tabelle
+            save_pending_to_db(case_id, raw_name, subject, from_addr, extracted)
+            case_tag = case_id[:8]
+            sub, body_mail = compose_reply(f"[PEAR-{case_tag}] – {subject or ''}".strip(), extracted["missing"])
             if send_email(from_addr, sub, body_mail):
                 mark_responded(bucket, raw_name)
             print(f"INFO: Pending angelegt: {case_id} (fehlend: {extracted['missing']})")
