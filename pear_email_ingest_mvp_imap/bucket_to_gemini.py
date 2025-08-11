@@ -297,6 +297,7 @@ def save_pending(bucket: storage.Bucket, case_id: str, raw_name: str, subject: s
                  from_email: Optional[str], extracted: dict) -> str:
     doc = {
         "case_id": case_id,
+        "case_tag": case_id[:8],  # Kurzes Case-Tag für E-Mail-Referenz
         "state": "PENDING_MISSING",
         "source_raw": f"gs://{GCS_BUCKET}/{raw_name}",
         "subject": subject,
@@ -424,11 +425,20 @@ def main():
         pending_path = None
 
         if case_short:
+            # Suche nach Case-Tag in Pending-Dateien
             for p in bucket.list_blobs(prefix=PENDING_PREFIX):
-                cid = p.name.split("/")[-1].replace(".json", "")
-                if cid[:8].lower() == case_short.lower():
-                    pending_path = p.name
-                    break
+                try:
+                    pending_doc = json.loads(p.download_as_text())
+                    stored_case_tag = pending_doc.get("case_tag", "")
+                    if stored_case_tag.lower() == case_short.lower():
+                        pending_path = p.name
+                        break
+                except Exception:
+                    # Fallback für alte Dateien ohne case_tag
+                    cid = p.name.split("/")[-1].replace(".json", "")
+                    if cid[:8].lower() == case_short.lower():
+                        pending_path = p.name
+                        break
 
         if not pending_path:
             pending_path = find_pending_by_sender(bucket, from_addr)

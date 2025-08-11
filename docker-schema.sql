@@ -5,10 +5,10 @@
 CREATE TABLE IF NOT EXISTS tbl_kunden (
     kunden_id INT AUTO_INCREMENT PRIMARY KEY,
     name_vollstaendig VARCHAR(255) NOT NULL UNIQUE,
-    adresse_strasse VARCHAR(255) NOT NULL,
+    adresse_strasse VARCHAR(255),
     adresse_hausnummer VARCHAR(50),
-    adresse_plz VARCHAR(20) NOT NULL,
-    adresse_ort VARCHAR(255) NOT NULL,
+    adresse_plz VARCHAR(20),
+    adresse_ort VARCHAR(255),
     adresszusatz TEXT,
     kontakt_telefon VARCHAR(50),
     kontakt_email VARCHAR(255),
