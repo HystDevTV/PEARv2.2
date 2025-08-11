@@ -333,6 +333,18 @@ def find_case_id_in_subject_or_body(subject: str, body: str) -> Optional[str]:
             return m.group(1)
     return None
 
+def extract_name_from_email(email: str) -> Optional[str]:
+    """Extrahiert Namen aus E-Mail-Adresse für Senior-Matching"""
+    if not email or "@" not in email:
+        return None
+    local_part = email.split("@")[0]
+    # Ersetze Punkte/Unterstriche mit Leerzeichen
+    name = local_part.replace(".", " ").replace("_", " ").replace("-", " ")
+    # Kapitalisiere erste Buchstaben
+    name = " ".join(word.capitalize() for word in name.split())
+    # Mindestens 2 Wörter für Vor- und Nachname
+    return name if len(name.split()) >= 2 else None
+
 def find_pending_by_sender(bucket: storage.Bucket, sender: Optional[str]) -> Optional[str]:
     if not sender:
         return None
@@ -424,13 +436,17 @@ def main():
         case_short = find_case_id_in_subject_or_body(subject, body)
         pending_path = None
 
+        print(f"DEBUG: Subject='{subject}', case_short='{case_short}'")
+
         if case_short:
             # Suche nach Case-Tag in Pending-Dateien
             for p in bucket.list_blobs(prefix=PENDING_PREFIX):
                 try:
                     pending_doc = json.loads(p.download_as_text())
                     stored_case_tag = pending_doc.get("case_tag", "")
+                    print(f"DEBUG: Checking pending {p.name}: stored_case_tag='{stored_case_tag}'")
                     if stored_case_tag.lower() == case_short.lower():
+                        print(f"DEBUG: MATCH! Using pending {p.name}")
                         pending_path = p.name
                         break
                 except Exception:
@@ -441,7 +457,39 @@ def main():
                         break
 
         if not pending_path:
+            print(f"DEBUG: No case-tag match, falling back to sender matching for {from_addr}")
             pending_path = find_pending_by_sender(bucket, from_addr)
+            if pending_path:
+                print(f"DEBUG: Found pending by sender: {pending_path}")
+
+        # Dritte Matching-Ebene: Name-in-E-Mail-Matching
+        if not pending_path:
+            extracted_name = extracted.get("name", "").strip()
+            email_name = extract_name_from_email(from_addr)
+            print(f"DEBUG: Trying name matching - extracted: '{extracted_name}', from email: '{email_name}'")
+            
+            if extracted_name or email_name:
+                for p in bucket.list_blobs(prefix=PENDING_PREFIX):
+                    try:
+                        pending_doc = json.loads(p.download_as_text())
+                        pending_name = pending_doc.get("extracted", {}).get("name", "").strip()
+                        
+                        # Match über extrahierten Namen oder E-Mail-Namen
+                        name_match = False
+                        if extracted_name and pending_name:
+                            name_match = extracted_name.lower() == pending_name.lower()
+                        elif email_name and pending_name:
+                            name_match = email_name.lower() == pending_name.lower()
+                        elif extracted_name and email_name:
+                            # Beide Namen aus aktueller E-Mail - prüfe gegen alle Pending
+                            name_match = extracted_name.lower() == email_name.lower()
+                            
+                        if name_match:
+                            print(f"DEBUG: Found pending by name matching: {p.name}")
+                            pending_path = p.name
+                            break
+                    except Exception:
+                        continue
 
         if pending_path:
             pending_doc = json.loads(bucket.blob(pending_path).download_as_text())
