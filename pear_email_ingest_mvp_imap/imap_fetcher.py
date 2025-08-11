@@ -19,8 +19,16 @@ def subject_matches(subject: str) -> bool:
         return True
     if not subject:
         return False
-    s = subject.lower()
-    return any(k in s for k in SUBJECT_KEYWORDS)
+    
+    # Dekodiere UTF-8 encoded subjects
+    try:
+        from email.header import decode_header, make_header
+        decoded_subject = str(make_header(decode_header(subject)))
+    except:
+        decoded_subject = subject
+        
+    s = decoded_subject.lower()
+    return any(k.lower() in s for k in SUBJECT_KEYWORDS)
 
 def connect_imap():
     if USE_SSL:

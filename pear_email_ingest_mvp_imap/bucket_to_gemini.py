@@ -249,15 +249,26 @@ def call_gemini(email_body: str) -> Dict[str, Any]:
         base["missing"] = REQ_FIELDS[:]
         base["confidence"] = 0.0
         return base
-    prompt = BASE_INSTR.format(email_body=email_body.strip())
-    resp = model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
-    raw = _strip_code_fences(getattr(resp, "text", "") or "")
+    
     try:
+        prompt = BASE_INSTR.format(email_body=email_body.strip())
+        resp = model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
+        raw = _strip_code_fences(getattr(resp, "text", "") or "")
+        
+        if not raw.strip():
+            raise ValueError("Empty Gemini response")
+            
         data = json.loads(raw)
-    except Exception:
+        if not isinstance(data, dict):
+            raise ValueError("Gemini response is not a dictionary")
+            
+    except Exception as e:
+        print(f"ERROR: Gemini API Fehler: {e}")
         data = {k: None for k in REQ_FIELDS}
         data["missing"] = REQ_FIELDS[:]
         data["confidence"] = 0.0
+        return data
+    
     missing = data.get("missing") or [f for f in REQ_FIELDS if not (data.get(f) or "").strip()]
     data["missing"] = missing
     data["confidence"] = 1.0 if not missing else min(float(data.get("confidence") or 0.9), 0.95)
@@ -286,6 +297,16 @@ def send_email(to_addr: Optional[str], subject: str, body: str) -> bool:
     except Exception as e:
         print(f"ERROR: SMTP-Fehler: {e}")
         return False
+
+def compose_duplicate_reply(subject: str, customer_id: int, customer_name: str) -> tuple[str, str]:
+    """Erstellt Antwort-E-Mail bei bereits existierendem Kunden"""
+    sub = f"Bestätigung: Kunde bereits erfasst – {subject or ''}".strip()
+    body = (f"Guten Tag,\\n\\nvielen Dank für Ihre Nachricht. "
+            f"Wir haben in unserer Datenbank überprüft: {customer_name} ist bereits als Kunde erfasst "
+            f"(Kunden-Nr. {customer_id}).\\n\\n"
+            f"Falls Sie Änderungen an den Kundendaten vornehmen möchten, wenden Sie sich bitte direkt an uns.\\n\\n"
+            f"Freundliche Grüße\\nIhr PEAR-Team")
+    return sub, body
 
 def compose_reply(subject: str, missing: List[str]) -> tuple[str, str]:
     if not missing:
@@ -442,6 +463,35 @@ def find_pending_by_sender(sender: str) -> Optional[dict]:
         
     except Exception as e:
         print(f"ERROR: DB-Fehler beim Sender-Matching: {e}")
+        return None
+
+def find_existing_customer(name: str, email: str) -> Optional[dict]:
+    """Prüft ob Kunde bereits in tbl_kunden existiert"""
+    if not all([DB_HOST, DB_USER, DB_PASSWORD, DB_NAME]):
+        return None
+    
+    try:
+        conn = mysql.connector.connect(
+            host=DB_HOST, port=DB_PORT,
+            user=DB_USER, password=DB_PASSWORD, database=DB_NAME
+        )
+        cur = conn.cursor(dictionary=True)
+        
+        # Prüfe nach Name oder E-Mail
+        cur.execute("""
+            SELECT kunden_id, name_vollstaendig, kontakt_email 
+            FROM tbl_kunden 
+            WHERE name_vollstaendig LIKE %s OR kontakt_email = %s
+            LIMIT 1
+        """, (f"%{name}%", email))
+        result = cur.fetchone()
+        
+        cur.close()
+        conn.close()
+        return result
+        
+    except Exception as e:
+        print(f"ERROR: DB-Fehler beim Kunden-Duplikats-Check: {e}")
         return None
 
 def find_pending_by_name(name: str) -> Optional[dict]:
@@ -614,7 +664,7 @@ def main():
 
         extracted = call_gemini(body)
         
-        if not extracted:
+        if not extracted or not isinstance(extracted, dict):
             print(f"ERROR: Gemini-Extraktion fehlgeschlagen für {raw_name}")
             continue
 
@@ -638,7 +688,7 @@ def main():
 
         # Ebene 3: Name-Matching
         if not pending_case:
-            extracted_name = extracted.get("name", "").strip()
+            extracted_name = (extracted.get("name") or "").strip() if extracted else ""
             email_name = extract_name_from_email(from_addr)
             print(f"DEBUG: Trying name matching - extracted: '{extracted_name}', from email: '{email_name}'")
             
@@ -673,6 +723,24 @@ def main():
                 print(f"INFO: Case {pending_case['case_id']} aktualisiert (fehlend: {merged['missing']}).")
             continue
 
+        # Prüfe ob Kunde bereits existiert (Duplikats-Check)
+        extracted_name = (extracted.get("name") or "").strip() if extracted else ""
+        extracted_email = (extracted.get("email") or "").strip() if extracted else ""
+        
+        if extracted_name or extracted_email:
+            existing_customer = find_existing_customer(extracted_name, extracted_email)
+            if existing_customer:
+                # Kunde bereits vorhanden - sende Bestätigungs-E-Mail
+                sub, body_mail = compose_duplicate_reply(
+                    subject, 
+                    existing_customer["kunden_id"], 
+                    existing_customer["name_vollstaendig"]
+                )
+                if send_email(from_addr, sub, body_mail):
+                    mark_responded(bucket, raw_name)
+                print(f"INFO: Duplikat erkannt - Kunde {existing_customer['name_vollstaendig']} (ID: {existing_customer['kunden_id']}) bereits vorhanden")
+                continue
+        
         # Neuen Case erstellen
         case_id = str(uuid.uuid4())
         
