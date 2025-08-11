@@ -15,7 +15,7 @@ ENV (Beispiele):
   GEMINI_API_KEY, GEMINI_MODEL=gemini-1.5-pro
   REQUIRED_FIELDS=name,first_name,last_name,email,phone,address,plz,city
   SMTP_HOST, SMTP_PORT=587, SMTP_USER, SMTP_PASSWORD, SMTP_FROM="PEAR Ingest" <postboy@pear-app.de>, SMTP_USE_SSL=false
-  MYSQL_HOST, MYSQL_PORT=3306, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB
+  DB_HOST, DB_PORT=3306, DB_USER, DB_PASSWORD, DB_NAME
 """
 
 import os, json, re, uuid, smtplib, base64
@@ -45,9 +45,9 @@ print("[DEBUG] DB_NAME:", os.getenv("DB_NAME"))
 
 # ---------------- DB-Check -----------------
 def test_db_connection():
-    """Testet, ob eine Verbindung zur MySQL-Datenbank möglich ist."""
+    """Testet, ob eine Verbindung zur DB-Datenbank möglich ist."""
     try:
-        conn = mysql.connector.connect(
+        conn = DB.connector.connect(
             host=os.getenv("DB_HOST", "127.0.0.1"),
             user=os.getenv("DB_USER"),
             password=os.getenv("DB_PASSWORD"),
@@ -85,11 +85,11 @@ SMTP_PASSWORD   = os.getenv("SMTP_PASSWORD")
 SMTP_FROM       = os.getenv("SMTP_FROM", "PEAR Ingest <noreply@pear-app.de>")
 SMTP_USE_SSL    = os.getenv("SMTP_USE_SSL", "false").lower() == "true"
 
-MYSQL_HOST      = os.getenv("MYSQL_HOST")
-MYSQL_PORT      = int(os.getenv("MYSQL_PORT", "3306"))
-MYSQL_USER      = os.getenv("MYSQL_USER")
-MYSQL_PASSWORD  = os.getenv("MYSQL_PASSWORD")
-MYSQL_DB        = os.getenv("MYSQL_DB")
+DB_HOST      = os.getenv("DB_HOST", "127.0.0.1")
+DB_PORT      = int(os.getenv("DB_PORT", "3306"))
+DB_USER      = os.getenv("DB_USER", "app_user")
+DB_PASSWORD  = os.getenv("DB_PASSWORD", "TempPass123!")
+DB_NAME      = os.getenv("DB_NAME", "pear_app_db")
 
 REQ_FIELDS = [f.strip() for f in (os.getenv("REQUIRED_FIELDS") or
                                  "name,first_name,last_name,email,phone,address,plz,city").split(",") if f.strip()]
@@ -357,14 +357,14 @@ def find_pending_by_sender(bucket: storage.Bucket, sender: Optional[str]) -> Opt
     return newest[0]
 
 def create_database_entry(data: Dict[str, Any], source_email: str, subject: str) -> bool:
-    if not all([MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB]):
+    if not all([DB_HOST, DB_USER, DB_PASSWORD, DB_NAME]):
         print("DB nicht konfiguriert – überspringe persistente Ablage (simuliere Erfolg).")
         return True
     try:
         import mysql.connector
         conn = mysql.connector.connect(
-            host=MYSQL_HOST, port=MYSQL_PORT,
-            user=MYSQL_USER, password=MYSQL_PASSWORD, database=MYSQL_DB
+            host=DB_HOST, port=DB_PORT,
+            user=DB_USER, password=DB_PASSWORD, database=DB_NAME
         )
         cur = conn.cursor()
         cur.execute("""
