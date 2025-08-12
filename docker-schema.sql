@@ -156,6 +156,96 @@ CREATE TABLE IF NOT EXISTS tbl_onboarding_pending (
     INDEX idx_sender (source_sender)
 );
 
+-- 🔐 Authentication System Tables
+CREATE TABLE IF NOT EXISTS tbl_accounts (
+    account_id VARCHAR(36) PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    subscription_tier ENUM('starter', 'professional', 'enterprise') DEFAULT 'starter',
+    max_users INT DEFAULT 1,
+    
+    -- 2FA (Mandatory for all accounts)
+    two_factor_enabled BOOLEAN DEFAULT TRUE,
+    two_factor_secret VARCHAR(255),
+    
+    -- Security & Rate Limiting
+    failed_login_attempts INT DEFAULT 0,
+    locked_until DATETIME NULL,
+    
+    -- User Preferences
+    session_timeout INT DEFAULT 7200, -- 2 hours
+    remember_device BOOLEAN DEFAULT TRUE,
+    
+    -- Activity Tracking
+    last_login DATETIME NULL,
+    login_count INT DEFAULT 0,
+    
+    -- Timestamps
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    INDEX idx_email (email),
+    INDEX idx_subscription_tier (subscription_tier)
+);
+
+-- Multi-User Support for Enterprise
+CREATE TABLE IF NOT EXISTS tbl_account_users (
+    user_id VARCHAR(36) PRIMARY KEY,
+    account_id VARCHAR(36) NOT NULL,
+    begleiter_id INT,
+    role ENUM('admin', 'user', 'readonly') DEFAULT 'user',
+    permissions JSON,
+    
+    -- Activity
+    last_login DATETIME NULL,
+    login_count INT DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE,
+    
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (account_id) REFERENCES tbl_accounts(account_id),
+    FOREIGN KEY (begleiter_id) REFERENCES tbl_begleiter(begleiter_id),
+    
+    INDEX idx_account_id (account_id),
+    INDEX idx_begleiter_id (begleiter_id)
+);
+
+-- Security Audit Logs
+CREATE TABLE IF NOT EXISTS tbl_auth_logs (
+    log_id INT AUTO_INCREMENT PRIMARY KEY,
+    account_id VARCHAR(36),
+    action VARCHAR(100) NOT NULL, -- login, logout, password_change, 2fa_setup, etc.
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    success BOOLEAN DEFAULT TRUE,
+    details JSON,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (account_id) REFERENCES tbl_accounts(account_id),
+    
+    INDEX idx_account_id (account_id),
+    INDEX idx_action (action),
+    INDEX idx_created_at (created_at)
+);
+
+-- Device Trust Management
+CREATE TABLE IF NOT EXISTS tbl_trusted_devices (
+    device_id VARCHAR(36) PRIMARY KEY,
+    account_id VARCHAR(36) NOT NULL,
+    device_name VARCHAR(255),
+    device_fingerprint VARCHAR(255) NOT NULL,
+    last_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
+    trust_level ENUM('trusted', 'unknown', 'suspicious') DEFAULT 'unknown',
+    
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (account_id) REFERENCES tbl_accounts(account_id),
+    
+    INDEX idx_account_id (account_id),
+    INDEX idx_fingerprint (device_fingerprint)
+);
+
 -- Test-Daten einfügen
 INSERT IGNORE INTO tbl_begleiter (name_vollstaendig, kontakt_email, passwort_hash, rolle) VALUES 
 ('Test Begleiter', 'test@pear-app.de', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewB.TGKNgTQBQQ3.', 'Begleiter');

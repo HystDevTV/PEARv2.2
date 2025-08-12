@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PEAR • Dev-Cloud Team Map</title>
+<style>
+  :root{
+    --bg:#FBFAF5; --surface:#F5F3EA; --tint:#EFF7E2; --accent:#79B14B; --accent2:#9adf66; --text:#2B2B2B; --muted:#6D6D6D;
+  }
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial}
+  .wrap{max-width:1200px;margin:0 auto;padding:20px}
+  h1{font-size:24px;margin:0 0 12px;font-weight:900}
+  p{margin:6px 0;color:var(--muted)}
+  .legend{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 14px}
+  .tag{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:linear-gradient(145deg,var(--tint),var(--surface));box-shadow:10px 10px 20px rgba(0,0,0,.12), -10px -10px 22px rgba(255,255,255,.92);font-weight:700;font-size:12px}
+  .canvas{background:linear-gradient(145deg,var(--surface),var(--bg));border-radius:24px;box-shadow:10px 10px 20px rgba(0,0,0,.12), -10px -10px 22px rgba(255,255,255,.92);padding:12px}
+  svg{width:100%;height:auto}
+  .node{filter:url(#soft);}
+  .n{fill:url(#panel);stroke:#fff;stroke-opacity:.6;stroke-width:1}
+  .title{font-weight:800;font-size:13px}
+  .meta{font-size:11px;fill:#6D6D6D}
+  .pill{fill:url(#pill);}
+  .arrow{stroke:#6D6D6D;stroke-width:1.6;marker-end:url(#a);}
+  .arrow-strong{stroke:#5A9237;stroke-width:2;marker-end:url(#a2);}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>PEAR – „Wer macht was?“ (Workstations, Review-Apps, Dev‑Assistenten)</h1>
+    <div class="legend">
+      <span class="tag">🧑‍💻 Dev (Workstation)</span>
+      <span class="tag">🌐 Review‑App (Cloud Run)</span>
+      <span class="tag">🧠 Dev‑Assistent (Bot)</span>
+      <span class="tag">🧪 Jobs (Tests/Load)</span>
+      <span class="tag">🛡️ Guardian & Budget</span>
+      <span class="tag">📦 Artifact Registry</span>
+      <span class="tag">☁️ GCS / DB</span>
+    </div>
+
+    <div class="canvas">
+      <svg viewBox="0 0 1200 740" role="img" aria-label="Team-Flow Diagramm">
+        <defs>
+          <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#F5F3EA"/>
+            <stop offset="100%" stop-color="#FBFAF5"/>
+          </linearGradient>
+          <linearGradient id="pill" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#EFF7E2"/>
+            <stop offset="100%" stop-color="#F5F3EA"/>
+          </linearGradient>
+          <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="10" dy="10" stdDeviation="8" flood-color="rgba(0,0,0,.12)"/>
+            <feDropShadow dx="-10" dy="-10" stdDeviation="10" flood-color="rgba(255,255,255,.9)"/>
+          </filter>
+          <marker id="a" markerWidth="12" markerHeight="12" refX="10" refY="3" orient="auto">
+            <path d="M0,0 L10,3 L0,6" fill="#6D6D6D" />
+          </marker>
+          <marker id="a2" markerWidth="12" markerHeight="12" refX="10" refY="3" orient="auto">
+            <path d="M0,0 L10,3 L0,6" fill="#5A9237" />
+          </marker>
+        </defs>
+
+        <!-- Swimlanes labels -->
+        <text x="40" y="50" class="title">Entwicklung</text>
+        <text x="40" y="260" class="title">CI/CD & Previews</text>
+        <text x="40" y="470" class="title">Automatisierung (Dev‑Assistenten)</text>
+
+        <!-- Dev Workstation -->
+        <g class="node">
+          <rect class="n" x="40" y="70" rx="18" ry="18" width="240" height="120"/>
+          <text x="60" y="100" class="title">🧑‍💻 Workstation</text>
+          <text x="60" y="124" class="meta">VS Code im Browser, Docker, Secrets</text>
+          <text x="60" y="144" class="meta">Commit, Tests lokal, Push</text>
+        </g>
+        <!-- Artifact Registry -->
+        <g class="node">
+          <rect class="n" x="320" y="70" rx="18" ry="18" width="220" height="120"/>
+          <text x="340" y="100" class="title">📦 Artifact Registry</text>
+          <text x="340" y="124" class="meta">Images & Pakete</text>
+          <text x="340" y="144" class="meta">reproduzierbare Builds</text>
+        </g>
+        <!-- Guardian & Budget -->
+        <g class="node">
+          <rect class="n" x="560" y="70" rx="18" ry="18" width="250" height="120"/>
+          <text x="580" y="100" class="title">🛡️ Guardian + Budget</text>
+          <text x="580" y="124" class="meta">Limits • Lockdown • Alerts</text>
+          <text x="580" y="144" class="meta">Janitor/TTL via Scheduler</text>
+        </g>
+        <!-- Observability -->
+        <g class="node">
+          <rect class="n" x="840" y="70" rx="18" ry="18" width="300" height="120"/>
+          <text x="860" y="100" class="title">📊 Logs/Monitoring</text>
+          <text x="860" y="124" class="meta">k6/E2E Reports, Kosten, SLA</text>
+          <text x="860" y="144" class="meta">GCS/BigQuery/Cloud Logs</text>
+        </g>
+
+        <!-- Arrows row 1 -->
+        <line class="arrow-strong" x1="280" y1="130" x2="320" y2="130"/>
+        <line class="arrow" x1="540" y1="130" x2="560" y2="130"/>
+        <line class="arrow" x1="810" y1="130" x2="840" y2="130"/>
+
+        <!-- CI/CD & Review Apps -->
+        <g class="node">
+          <rect class="n" x="40" y="280" rx="18" ry="18" width="260" height="120"/>
+          <text x="60" y="310" class="title">🤖 Cloud Build</text>
+          <text x="60" y="334" class="meta">Build, Test, Deploy Trigger</text>
+          <text x="60" y="354" class="meta">PR/Branch → Pipeline</text>
+        </g>
+        <g class="node">
+          <rect class="n" x="340" y="280" rx="18" ry="18" width="260" height="120"/>
+          <text x="360" y="310" class="title">🌐 Review‑App</text>
+          <text x="360" y="334" class="meta">Cloud Run URL pro Branch</text>
+          <text x="360" y="354" class="meta">Stakeholder testen klickbar</text>
+        </g>
+        <g class="node">
+          <rect class="n" x="640" y="280" rx="18" ry="18" width="220" height="120"/>
+          <text x="660" y="310" class="title">🧪 Cloud Run Jobs</text>
+          <text x="660" y="334" class="meta">k6 Load • E2E • Seeds</text>
+          <text x="660" y="354" class="meta">Berichte → GCS/Logs</text>
+        </g>
+        <g class="node">
+          <rect class="n" x="900" y="280" rx="18" ry="18" width="240" height="120"/>
+          <text x="920" y="310" class="title">🧍 Feedback</text>
+          <text x="920" y="334" class="meta">Silvia, Teamlead, Tester</text>
+          <text x="920" y="354" class="meta">Kommentare → PR</text>
+        </g>
+
+        <!-- Arrows row 2 -->
+        <line class="arrow" x1="170" y1="190" x2="170" y2="280"/>
+        <line class="arrow-strong" x1="300" y1="340" x2="340" y2="340"/>
+        <line class="arrow" x1="600" y1="340" x2="640" y2="340"/>
+        <line class="arrow" x1="860" y1="340" x2="900" y2="340"/>
+
+        <!-- Automation lane -->
+        <g class="node">
+          <rect class="n" x="40" y="490" rx="18" ry="18" width="260" height="170"/>
+          <text x="60" y="520" class="title">🧠 Dev‑Assistenten</text>
+          <text x="60" y="544" class="meta">Mail‑Ingest • Doku‑Generator</text>
+          <text x="60" y="564" class="meta">Rechnungsvorschau • OCR</text>
+          <text x="60" y="584" class="meta">Guardian Watch</text>
+        </g>
+        <g class="node">
+          <rect class="n" x="340" y="490" rx="18" ry="18" width="260" height="170"/>
+          <text x="360" y="520" class="title">☁️ GCS / DB</text>
+          <text x="360" y="544" class="meta">raw/ • structured/ Buckets</text>
+          <text x="360" y="564" class="meta">MySQL (Kunden, Einsätze)</text>
+          <text x="360" y="584" class="meta">Logs, Anhänge</text>
+        </g>
+        <g class="node">
+          <rect class="n" x="640" y="490" rx="18" ry="18" width="220" height="170"/>
+          <text x="660" y="520" class="title">✉️ Auto‑Antworten</text>
+          <text x="660" y="544" class="meta">Erfasst • Nachfragen • Duplikat</text>
+          <text x="660" y="564" class="meta">Thread‑Kontinuität</text>
+        </g>
+        <g class="node">
+          <rect class="n" x="900" y="490" rx="18" ry="18" width="240" height="170"/>
+          <text x="920" y="520" class="title">📱 PEAR App Nutzerin</text>
+          <text x="920" y="544" class="meta">Termine, Navi, ✨KI‑Aufgaben</text>
+          <text x="920" y="564" class="meta">Doku + Abrechnung</text>
+        </g>
+
+        <!-- Arrows row 3 -->
+        <line class="arrow" x1="300" y1="575" x2="340" y2="575"/>
+        <line class="arrow" x1="600" y1="575" x2="640" y2="575"/>
+        <line class="arrow-strong" x1="860" y1="575" x2="900" y2="575"/>
+        <line class="arrow" x1="1020" y1="490" x2="1020" y2="400"/>
+        <line class="arrow" x1="1020" y1="280" x2="1020" y2="190"/>
+
+        <!-- Notes pill -->
+        <g class="node">
+          <rect class="n" x="40" y="680" rx="18" ry="18" width="1100" height="40"/>
+          <text x="60" y="706" class="meta">Ablauf (typisch): 1) Dev pusht Code → 2) Cloud Build deployt Review‑App → 3) Jobs laufen (k6/E2E) → 4) Feedback fließt in den PR → 5) Merge → 6) Dev‑Assistenten verarbeiten echte Daten (Mail/Doku/Rechnung) → 7) Nutzerinnen sehen die Ergebnisse in der App.</text>
+        </g>
+      </svg>
+    </div>
+
+    <p><strong>Aufgaben‑Beispiele je Rolle:</strong></p>
+    <ul>
+      <li><b>🧑‍💻 Dev (Workstation):</b> Feature bauen, Tests schreiben, Container lokal starten, Push.</li>
+      <li><b>🌐 Review‑App:</b> Klickbare Vorschau für Silvia/Teamlead, UI‑Abnahme, Usertests.</li>
+      <li><b>🧪 Jobs:</b> k6‑Load, E2E (Login→Termin→Navi→✨KI), Seeds/Migrationen, Mail‑Replay.</li>
+      <li><b>🧠 Dev‑Assistenten:</b> E‑Mails parsen, Fälle matchen, Doku generieren, Rechnungsvorschau, OCR von Belegen, Guardian‑Checks.</li>
+      <li><b>🛡️ Guardian:</b> Volumenlimits, Lockdown, Auto‑Cleanup, Budget‑Alerts.</li>
+      <li><b>📱 Nutzerin:</b> Sieht Termine, startet Navigation, bestätigt Doku/Abrechnung.</li>
+    </ul>
+  </div>
+</body>
+</html>

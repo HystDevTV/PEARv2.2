@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PEAR – Ihre Zeit gehört den Menschen, nicht dem Papierkram.</title>
+  <meta name="description" content="PEAR – Einsatz-, Abrechnungs- und Ressourcenverwaltung für Alltagsbegleiter:innen. Ihre Zeit gehört den Menschen, nicht dem Papierkram." />
+  <style>
+    /* =============================
+       PEAR Soft-Neumorph Landing
+       ============================= */
+    :root{
+      --pear-bg:#FBFAF5;          /* helles Creme */
+      --pear-surface:#F5F3EA;     /* Panel */
+      --pear-tint:#EFF7E2;        /* zarter Birnen-Schimmer */
+      --pear-accent:#79B14B;      /* Hauptgrün */
+      --pear-accent-dark:#5A9237; /* dunkleres Grün */
+      --text:#2B2B2B;             /* Lesetext */
+      --muted:#6D6D6D;            /* Sekundärtext */
+
+      --shadow-out: 10px 10px 20px rgba(0,0,0,.12), -10px -10px 22px rgba(255,255,255,.92);
+      --shadow-out-2: 14px 14px 28px rgba(0,0,0,.16), -14px -14px 28px rgba(255,255,255,.94);
+      --shadow-in: inset 10px 10px 20px rgba(0,0,0,.10), inset -10px -10px 20px rgba(255,255,255,.95);
+      --radius-xl: 28px;
+      --radius-lg: 18px;
+      --radius-md: 14px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: radial-gradient(100% 70% at 50% 0%, #FFFFFF 0%, var(--pear-bg) 55%, #F7F4EA 100%);
+      color: var(--text); line-height:1.35;
+      -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    }
+
+    .p-wrap{max-width:1200px; margin:0 auto; padding:22px}
+    .p-row{display:grid; gap:18px}
+    .p-row.cols-2{grid-template-columns:1.4fr 1fr}
+    .p-row.cols-3{grid-template-columns:repeat(3, minmax(0,1fr))}
+    @media (max-width: 1024px){ .p-row.cols-2{grid-template-columns:1fr} .p-row.cols-3{grid-template-columns:1fr} }
+
+    /* Nav */
+    .p-nav{ position:sticky; top:0; z-index:30; backdrop-filter: blur(8px);
+      background: color-mix(in oklab, var(--pear-bg) 70%, #fff);
+      border-bottom:1px solid rgba(0,0,0,.04);
+    }
+    .p-nav-inner{ max-width:1200px; margin:0 auto; padding:10px 22px; display:flex; align-items:center; justify-content:space-between }
+    .p-brand{ display:flex; align-items:center; gap:12px; text-decoration:none; color:inherit }
+    .p-logo-wrap{ display:inline-flex; align-items:center; justify-content:center; padding:8px 12px; border-radius:16px; background: linear-gradient(145deg, var(--pear-surface), var(--pear-bg)); box-shadow: var(--shadow-out); }
+    .p-logo{ height:32px; width:auto; display:block }
+    .p-brand-text{ display:flex; flex-direction:column; }
+    .p-brand-name{ font-weight:900; letter-spacing:.3px }
+    .p-brand-tag{ font-size:11px; color:var(--muted) }
+    .p-links a{ color:inherit; text-decoration:none; font-weight:700; margin:0 10px }
+    .p-links a:hover{ text-decoration:underline }
+    .p-cta{ display:flex; gap:10px }
+    .p-btn{ display:inline-flex; align-items:center; gap:8px; border:none; cursor:pointer; padding:10px 16px; border-radius:999px; font-weight:800; color:var(--pear-accent-dark); background: linear-gradient(145deg, var(--pear-tint), var(--pear-surface)); box-shadow: var(--shadow-out); }
+    .p-btn:hover{ box-shadow: var(--shadow-out-2); transform: translateY(-1px) }
+    .p-btn.primary{ color:white; background: linear-gradient(145deg, var(--pear-accent), #8AD15D) }
+
+    /* Hero */
+    .p-hero{ padding:32px 0 16px }
+    .p-hero h1{ font-size: clamp(28px, 5.2vw, 56px); line-height:1.05; margin:0 0 10px; font-weight:1000; letter-spacing:.2px; }
+    .p-hero h1 .p-highlight{ background: linear-gradient(90deg, var(--pear-accent) 0%, #A8DF6C 100%);
+      -webkit-background-clip:text; background-clip:text; color:transparent }
+    .p-hero p{ max-width:740px; color:var(--muted); font-size: clamp(14px, 1.2vw, 18px); margin:8px 0 16px }
+    .p-hero-ctas{ display:flex; gap:10px; flex-wrap:wrap; align-items:center }
+    .p-hero-badge{ display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px; font-weight:800; font-size:12px; background:linear-gradient(145deg, var(--pear-tint), var(--pear-surface)); box-shadow: var(--shadow-out); color: var(--pear-accent-dark) }
+
+    /* Hero visual (mock) */
+    .p-visual{ position:relative; }
+    .p-visual .p-pulled{ position:relative; border-radius:36px; padding:14px; background: radial-gradient(160% 140% at 50% 15%, #FFFFFF 0%, var(--pear-surface) 45%, #EEEBDD 100%); box-shadow: 0 18px 28px rgba(0,0,0,.14), 0 8px 12px rgba(0,0,0,.06), -8px -8px 16px rgba(255,255,255,.90); }
+    .p-visual .p-pulled::before{ content:""; position:absolute; inset:8px; border-radius:30px; pointer-events:none; box-shadow: inset -18px -18px 28px rgba(255,255,255,.85), inset 18px 18px 28px rgba(0,0,0,.08); }
+    .p-visual .p-map{ position:relative; width:100%; height:320px; border-radius:26px; overflow:hidden; background: linear-gradient(180deg, #f1f8e9, #eef5e5); box-shadow: 0 10px 18px rgba(0,0,0,.10), -6px -6px 14px rgba(255,255,255,.80); }
+    .p-visual .p-map::after{ content:""; position:absolute; inset:0; pointer-events:none; background: radial-gradient(120% 90% at 50% 0%, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 40%), radial-gradient(120% 90% at 50% 100%, rgba(0,0,0,.10) 0%, rgba(0,0,0,0) 55%), radial-gradient(120% 120% at 0% 50%, rgba(255,255,255,.18) 0%, rgba(255,255,255,0) 40%), radial-gradient(120% 120% at 100% 50%, rgba(0,0,0,.06) 0%, rgba(0,0,0,0) 40%); }
+
+    /* Feature grid */
+    .p-section-title{ display:flex; align-items:center; justify-content:space-between; margin:8px 0; font-weight:900 }
+    .p-card{ background: linear-gradient(145deg, var(--pear-surface), var(--pear-bg)); border-radius: var(--radius-xl); box-shadow: var(--shadow-out); padding:16px; }
+    .p-card h3{ margin:4px 0 6px; font-size:18px; font-weight:800 }
+    .p-card p{ margin:0; color:var(--muted); font-size:14px }
+
+    /* Steps */
+    .p-step{ display:flex; gap:12px; align-items:flex-start }
+    .p-step .p-num{ width:34px; height:34px; display:inline-flex; align-items:center; justify-content:center; border-radius:999px; background: linear-gradient(145deg, var(--pear-tint), var(--pear-surface)); box-shadow: var(--shadow-out); font-weight:900; color: var(--pear-accent-dark) }
+
+    /* Trust/Badges */
+    .p-badges{ display:flex; gap:10px; flex-wrap:wrap }
+    .p-badge{ display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px; font-weight:700; font-size:12px; background:linear-gradient(145deg, var(--pear-tint), var(--pear-surface)); box-shadow: var(--shadow-out); color: var(--muted) }
+
+    /* Footer */
+    .p-footer{ margin:32px 0 12px; text-align:center; color:var(--muted); font-size:12px; }
+    .p-footer .links{ margin-top:8px; letter-spacing:.3px; white-space:pre; }
+
+    /* Reveal animations */
+    .reveal{ opacity:0; transform: translateY(10px); transition: opacity .5s ease, transform .5s ease; }
+    .reveal.is-in{ opacity:1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+  <header class="p-nav">
+    <div class="p-nav-inner">
+      <a href="#top" class="p-brand">
+        <span class="p-logo-wrap"><img id="pearLogo" class="p-logo" src="images/Logo.png" alt="PEAR Logo" loading="eager" decoding="async" /></span>
+        <span class="p-brand-text">
+          <span class="p-brand-name">PEAR</span>
+          <span class="p-brand-tag">Einsatz · Abrechnung · Ressourcen</span>
+        </span>
+      </a>
+      <nav class="p-links">
+        <a href="#features">Funktionen</a>
+        <a href="#how">So funktioniert's</a>
+        <a href="#trust">Sicherheit</a>
+        <a href="#contact">Kontakt</a>
+      </nav>
+      <div class="p-cta">
+        <a href="login_public.html" class="p-btn">Anmelden</a>
+        <a href="#contact" class="p-btn primary">Kostenlos testen</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="p-wrap" id="top">
+    <!-- HERO -->
+    <section class="p-hero p-row cols-2">
+      <div>
+        <span class="p-hero-badge">🍐 PEAR</span>
+        <h1>Ihre Zeit gehört den <span class="p-highlight">Menschen</span>, nicht dem <span class="p-highlight">Papierkram</span>.</h1>
+        <p>Die freundliche All‑in‑One‑Plattform für Alltagsbegleiter:innen: Termine, Navigation, ✨KI‑Aufgaben, Dokumentation und Abrechnung – in einem Flow. Weniger Tippen, mehr Zeit für das, was zählt.</p>
+        <div class="p-hero-ctas">
+          <a href="#contact" class="p-btn primary">Kostenlos testen</a>
+          <a href="#features" class="p-btn">Funktionen ansehen</a>
+          <span class="p-badge">🛡️ Guardian: NORMAL</span>
+        </div>
+      </div>
+      <div class="p-visual reveal">
+        <div class="p-pulled">
+          <div class="p-map"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features" class="p-row" style="margin-top:24px">
+      <div class="p-section-title">Was PEAR für Sie erledigt</div>
+      <div class="p-row cols-3">
+        <article class="p-card reveal"><h3>Termine & Routen</h3><p>Der Tag auf einen Blick. Route starten, ETA sehen, Staus umgehen – direkt aus dem Termin.</p></article>
+        <article class="p-card reveal"><h3>✨KI‑Aufgaben</h3><p>Dokumentation, Rechnungsentwürfe, Uploads – laufen im Hintergrund. Sie kümmern sich um die Menschen.</p></article>
+        <article class="p-card reveal"><h3>Dokumentation</h3><p>Klare Masken, Checklisten & Notizen. In Minuten erledigt – revisionssicher gespeichert.</p></article>
+        <article class="p-card reveal"><h3>Abrechnung</h3><p>Automatisierte Vorschläge, transparente Korrekturen. Exportbereit für Ihre Systeme.</p></article>
+        <article class="p-card reveal"><h3>Guardian‑Schutz</h3><p>Volumen‑Limits, Lockdown, Kostenwächter. Produktionstauglich ab Tag 1.</p></article>
+        <article class="p-card reveal"><h3>DSGVO & Rechte</h3><p>Datensparsam, rollenbasiert, nachvollziehbar. Voll unter Ihrer Kontrolle.</p></article>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section id="how" class="p-row" style="margin-top:28px">
+      <div class="p-section-title">So funktioniert's</div>
+      <div class="p-card reveal">
+        <div class="p-row cols-3">
+          <div class="p-step"><div class="p-num">1</div><div><strong>Planen</strong><br/>Termine kommen per Mail rein oder werden in der App angelegt.</div></div>
+          <div class="p-step"><div class="p-num">2</div><div><strong>Begleiten</strong><br/>Navigation starten, Fahrtart wählen (Anfahrt, Dienst, Privat) – Zeiten tracken sich selbst.</div></div>
+          <div class="p-step"><div class="p-num">3</div><div><strong>Fertig</strong><br/>✨KI fasst zusammen, erstellt Doku & Rechnungsvorschlag. Sie prüfen – erledigt.</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TRUST / BADGES -->
+    <section id="trust" class="p-row" style="margin-top:28px">
+      <div class="p-section-title">Sicherheit & Verlässlichkeit</div>
+      <div class="p-card reveal">
+        <div class="p-badges">
+          <span class="p-badge">🔐 DSGVO-konform</span>
+          <span class="p-badge">🛡️ Guardian: Threat Level NORMAL</span>
+          <span class="p-badge">☁️ Verschlüsselter Cloud‑Speicher</span>
+          <span class="p-badge">🔁 Backups & Versionierung</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT / CTA -->
+    <section id="contact" class="p-row" style="margin-top:32px">
+      <div class="p-section-title">Lust auf weniger Papierkram?</div>
+      <div class="p-row cols-2">
+        <div class="p-card reveal">
+          <h3 style="margin-top:0">Demo anfragen</h3>
+          <p class="p-muted">Wir melden uns schnell zurück und zeigen PEAR in 15 Minuten.</p>
+          <form onsubmit="event.preventDefault(); this.reset(); alert('Danke! Wir melden uns.');">
+            <div class="p-row" style="grid-template-columns:1fr 1fr">
+              <input required placeholder="Ihr Name" class="p-input" />
+              <input required type="email" placeholder="E‑Mail" class="p-input" />
+            </div>
+            <textarea rows="4" placeholder="Ihr Anliegen (optional)" class="p-input" style="margin-top:8px"></textarea>
+            <div style="display:flex; gap:10px; margin-top:10px">
+              <button class="p-btn primary" type="submit">Demo anfragen</button>
+              <a href="login_public.html" class="p-btn">Anmelden</a>
+            </div>
+          </form>
+        </div>
+        <div class="p-card reveal">
+          <h3 style="margin-top:0">Kontakt</h3>
+          <p>E‑Mail: <a href="mailto:hystdev2019@gmail.com">hystdev2019@gmail.com</a></p>
+          <p>Adresse: Ahornstraße 7, 47829 Krefeld</p>
+          <p class="p-muted">Support werktags 9–17 Uhr</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER (fix) -->
+    <footer class="p-footer">
+      © 2025 PEAR. Mit ❤️ entwickelt für Heldinnen und Helden des Alltags.
+      <div class="links"><a href="impressum.html">Impressum</a> Datenschutz AGB</div>
+    </footer>
+  </main>
+
+  <script>
+    // Logo-Fallback: probiert mehrere Pfade/Schreibweisen (wie in anderen Seiten)
+    (function(){
+      const el = document.getElementById('pearLogo');
+      if (!el) return;
+      const candidates = ['images/Logo.png','images/logo.png','/images/Logo.png','/images/logo.png','Logo.png','logo.png'];
+      let i = 0; el.addEventListener('error', function handler(){ i++; if (i < candidates.length) { el.src = candidates[i]; } else { el.removeEventListener('error', handler); console.warn('PEAR Logo nicht gefunden.'); } });
+    })();
+
+    // Inputs (neumorph)
+    (function(){
+      const style = document.createElement('style');
+      style.textContent = `.p-input{background:linear-gradient(145deg, var(--pear-tint), var(--pear-surface)); box-shadow: var(--shadow-in); border:none; border-radius:${'var(--radius-lg)'}; padding:12px 14px; color:var(--text); width:100%}
+      .p-input::placeholder{color:#9aa197}
+      .p-input:focus{outline:0; box-shadow: inset 10px 10px 20px rgba(0,0,0,.08), inset -10px -10px 20px rgba(255,255,255,.95), 0 0 0 3px color-mix(in oklab, var(--pear-accent) 35%, #fff);}`;
+      document.head.appendChild(style);
+    })();
+
+    // Reveal animations
+    const io = new IntersectionObserver((entries)=>{
+      entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('is-in'); io.unobserve(e.target); } });
+    }, {threshold: 0.15});
+    document.querySelectorAll('.reveal').forEach(el=> io.observe(el));
+  </script>
+</body>
+</html>
