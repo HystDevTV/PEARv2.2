@@ -1,0 +1,10 @@
+Name (vollständig): Max Mustermann
+Kontakt (Telefon): 0123 456789
+Kontakt (E-Mail): max.mustermann@beispiel.de
+Adresse (Straße): Musterstraße
+Alter: 68
+Adresse (Hausnummer): 123
+Adresse (PLZ): 12345
+Adresse (Ort): Musterstadt
+Firmenname (Klientenvermittlung): Agentur Sonnenschein
+Steuernummer (Fiktiv): DE123456789

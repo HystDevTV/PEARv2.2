@@ -17,4 +17,4 @@ COPY main.py .
 ENV PORT 8080
 
 # Starte die Anwendung, wenn der Container gestartet wird
-ENTRYPOINT ["functions-framework", "--target", "process_email_from_bucket", "--port", "8080"]
+ENTRYPOINT ["functions-framework", "--target", "process_email_from_bucket"]

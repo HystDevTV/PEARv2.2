@@ -10,7 +10,7 @@ from google.cloud import storage
 # Die URL Ihres FastAPI-Backends
 FASTAPI_API_URL = os.getenv("FASTAPI_API_URL", "http://35.206.123.242:8000")
 # Der API-Endpunkt für die Registrierung
-REGISTER_API_ENDPOINT = f"{FASTAPI_API_URL}/api/register"
+REGISTER_API_ENDPOINT = f"{FASTAPI_API_URL}/api/extract_and_register_client"
 
 # --- Initialisierung ---
 storage_client = storage.Client()

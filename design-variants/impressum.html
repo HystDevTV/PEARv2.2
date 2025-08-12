@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Impressum • PEAR</title>
+  <style>
+    /* PEAR – Legal/Impressum Theme (scoped) */
+    .pear-legal {
+      --pear-bg:#FBFAF5; --pear-surface:#F5F3EA; --pear-tint:#EFF7E2;
+      --pear-accent:#79B14B; --pear-accent-dark:#5A9237;
+      --text:#2B2B2B; --muted:#6D6D6D;
+      --shadow-out: 10px 10px 20px rgba(0,0,0,.12), -10px -10px 22px rgba(255,255,255,.92);
+      --shadow-in: inset 10px 10px 20px rgba(0,0,0,.10), inset -10px -10px 20px rgba(255,255,255,.95);
+      --radius-xl: 22px; --radius-lg: 16px;
+      background:var(--pear-bg); color:var(--text); -webkit-font-smoothing:antialiased;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      margin:0;
+    }
+    .pear-legal *{ box-sizing: border-box; }
+
+    /* Wrap */
+    .legal-wrap{ max-width:900px; margin:0 auto; padding:24px 20px; }
+
+    /* Logo / Brand */
+    .legal-brand{ display:flex; justify-content:center; margin:6px 0 16px; }
+    .logo-wrap{
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:10px 16px; border-radius:20px;
+      background: linear-gradient(145deg, var(--pear-surface), var(--pear-bg));
+      box-shadow: var(--shadow-out);
+    }
+    .logo-wrap img{ height:46px; width:auto; display:block; }
+
+    /* Card */
+    .legal-card{
+      background: linear-gradient(145deg, var(--pear-surface), var(--pear-bg));
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-out);
+      padding:24px;
+    }
+
+    /* Headings & text */
+    h1{ font-size:28px; margin:0 0 10px; font-weight:900; letter-spacing:.2px; }
+    h2{ font-size:20px; margin:22px 0 8px; font-weight:800; }
+    h3{ font-size:16px; margin:16px 0 6px; font-weight:700; }
+    p, li{ line-height:1.55; }
+    p{ margin:8px 0; color:var(--text); }
+    .muted{ color:var(--muted); }
+
+    a{ color:var(--pear-accent-dark); text-decoration:none; font-weight:700; }
+    a:hover{ text-decoration:underline; }
+
+    /* Footer (immer gleich) */
+    .legal-footer{ text-align:center; color:var(--muted); font-size:12px; margin:20px 0 10px; }
+    .legal-footer .links{ margin-top:8px; letter-spacing:.3px; white-space:pre; }
+
+    /* Print */
+    @media print {
+      .pear-legal { background:#fff; }
+      .logo-wrap, .legal-card { box-shadow:none; background:#fff; }
+      a{ text-decoration:underline; color:#000; }
+    }
+  </style>
+</head>
+<body class="pear-legal">
+  <div class="legal-wrap">
+    <!-- Brand -->
+    <div class="legal-brand">
+      <span class="logo-wrap">
+        <img id="pearLogo" src="images/Logo.png" alt="PEAR Logo" loading="eager" decoding="async" />
+      </span>
+    </div>
+
+    <!-- CONTENT CARD (Texte aus deiner Seite übernommen) -->
+    <main class="legal-card">
+      <h1>Impressum</h1>
+      <p class="muted">Angaben gemäß § 5 TMG:</p>
+
+      <h3>Dienstanbieter</h3>
+      <p>Jan P. E. Steinert</p>
+      <p>Ahornstraße 7</p>
+      <p>47829 Krefeld</p>
+
+      <h3>Kontakt</h3>
+      <p>E-Mail: <a href="mailto:hystdev2019@gmail.com">hystdev2019@gmail.com</a></p>
+
+      <h3>Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV</h3>
+      <p>Jan P. E. Steinert</p>
+      <p>Ahornstraße 7, 47829 Krefeld</p>
+
+      <h3>Streitschlichtung</h3>
+      <p>Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit:</p>
+      <p><a href="https://ec.europa.eu/consumers/odr/" target="_blank" rel="noopener">https://ec.europa.eu/consumers/odr/</a></p>
+      <p>Unsere E-Mail-Adresse finden Sie oben im Impressum.</p>
+      <p>Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
+    </main>
+
+    <!-- FOOTER (immer identisch) -->
+    <footer class="legal-footer">
+      © 2025 PEAR. Mit ❤️ entwickelt für Heldinnen und Helden des Alltags.
+      <div class="links">Impressum Datenschutz AGB</div>
+    </footer>
+  </div>
+
+  <script>
+    // Logo-Fallback: probiert mehrere Pfade/Schreibweisen (wie im Dashboard)
+    (function(){
+      const el = document.getElementById('pearLogo');
+      if (!el) return;
+      const candidates = [
+        'images/Logo.png','images/logo.png','/images/Logo.png','/images/logo.png','Logo.png','logo.png'
+      ];
+      let i = 0;
+      el.addEventListener('error', function handler(){
+        i++; if (i < candidates.length) { el.src = candidates[i]; }
+        else { el.removeEventListener('error', handler); console.warn('PEAR Logo nicht gefunden.'); }
+      });
+    })();
+  </script>
+</body>
+</html>
