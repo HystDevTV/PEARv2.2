@@ -28,6 +28,7 @@ from dotenv import load_dotenv
 import mysql.connector
 from mysql.connector import Error
 from email_guardian import EmailGuardian
+from emergency_sync import EmergencyDataSync
 
 load_dotenv()
 
@@ -264,6 +265,10 @@ class PEARAuthSystem:
                 """, (email,))
                 conn.commit()
                 
+                # EMERGENCY SYNC: If account gets locked, sync today's appointments
+                if user_data['failed_login_attempts'] >= 4:  # Will be 5 after this attempt
+                    self.trigger_emergency_sync(user_data['account_id'], "Account locked - 5 failed attempts")
+                
                 return AuthResult(False, None, None, False, "Invalid credentials", 
                                 {"action": "login_failed", "email": email, "reason": "invalid_password"})
             
@@ -326,6 +331,46 @@ class PEARAuthSystem:
         # For now just return success - in production would blacklist the token
         return True
     
+    def trigger_emergency_sync(self, account_id: str, reason: str):
+        """🚨 EMERGENCY: Sync today's appointments to Google Calendar when account locked"""
+        try:
+            # Get begleiter_id from account
+            conn = self.get_db_connection()
+            if not conn:
+                return
+            
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT au.begleiter_id 
+                FROM tbl_account_users au 
+                WHERE au.account_id = %s AND au.is_active = TRUE
+                LIMIT 1
+            """, (account_id,))
+            
+            result = cursor.fetchone()
+            cursor.close()
+            conn.close()
+            
+            if result and result[0]:
+                begleiter_id = result[0]
+                
+                # Trigger emergency sync
+                emergency_sync = EmergencyDataSync()
+                success = emergency_sync.trigger_emergency_sync(begleiter_id, reason)
+                
+                # Log the emergency sync
+                self.audit_log("emergency_sync", account_id, {
+                    "reason": reason,
+                    "begleiter_id": begleiter_id,
+                    "success": success
+                })
+                
+                print(f"🚨 EMERGENCY SYNC {'SUCCESS' if success else 'FAILED'}: {reason}")
+            
+        except Exception as e:
+            print(f"ERROR: Emergency sync failed: {e}")
+            self.audit_log("emergency_sync_error", account_id, {"error": str(e)})
+
     def audit_log(self, action: str, user_id: str, details: Dict[str, Any]):
         """Log security-relevant events"""
         conn = self.get_db_connection()

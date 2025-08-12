@@ -42,7 +42,7 @@
     │  🔍 Keyword Filter               🤖 Flask Background Worker          │
     │  ├─ "Kundendaten"               ┌─────────────────────────┐           │
     │  ├─ "Anfrage"                   │  🔄 Automated Cycle:    │           │
-    │  ├─ "Re:"                       │  0. 🛡️ Guardian Check  │           │
+    │  ├─ "Re:"                       │  0. 🛡️ Guardian Check   │           │
     │  └─ "PEAR-"                     │  1. 🔍 IMAP Fetch       │           │
     │      │                          │  2. 🧠 AI Process       │           │
     │      ▼                          │  3. 📊 DB Update        │           │
@@ -60,10 +60,10 @@
     │  ├─ 📋 Namen (Vor-/Nachname)     ├─ 🏠 Adressen (Str. + PLZ + Stadt) │
     │  ├─ 📞 Telefon (alle Formate)    ├─ 📧 E-Mail Adressen               │
     │  ├─ 🏢 Tabellen-Format           └─ 💬 Deutsche Kontext-Hinweise     │
-    │  └─ ❓ Missing Fields Detection                                       │
-    │                                                                        │
-    │      │ JSON Response                                                   │
-    │      ▼                                                                 │
+    │  └─ ❓ Missing Fields Detection                                      │
+    │                                                                       │
+    │      │ JSON Response                                                  │
+    │      ▼                                                                │
     │  🔍 3-TIER MATCHING ALGORITHM                                         │
     │  ├─ 🏷️  Case-Tag [PEAR-XXXXXXXX]                                      │
     │  ├─ 📧 Sender Email Address                                           │
@@ -80,20 +80,20 @@
     │                                                                       │
     │  ┌─ Existing Customer? ─┐                                             │
     │  │  🔍 Duplicate Check   │                                            │
-    │  └─────┬─────────────────┘                                             │
+    │  └─────┬─────────────────┘                                            │
     │        │ YES                                                          │
     │        ▼                                                              │
     │  📨 "Kunde bereits erfasst                                            │
-    │      (Kunden-Nr. XXX)"                                               │
+    │      (Kunden-Nr. XXX)"                                                │
     │        │                                                              │
     │        ▼                                                              │
     │  🎯 CASE CLOSED                                                      │
     │                                                                       │
     │  ┌─ New/Update Case? ─┐                                               │
     │  │  🆕 Fresh Data      │                                              │
-    │  └─────┬───────────────┘                                               │
-    │        │ NO MATCH                                                      │
-    │        ▼                                                               │
+    │  └─────┬───────────────┘                                              │
+    │        │ NO MATCH                                                     │
+    │        ▼                                                              │
     │  │  ✅ All Fields   │                                                 │
     │  └─────┬─────────────┘                                                 │
     │        │ YES          │ NO                                             │
@@ -106,17 +106,17 @@
     └────────────────────────────────────────────────────────────────────────┘
 
     ┌─ PHASE 4: AUTOMATED COMMUNICATION ────────────────────────────────────┐
-    │                                                                        │
+    │                                                                       │
     │  📧 SMTP Auto-Reply System                                            │
     │  ├─ ✅ Success: "Vollständig erfasst"                                 │
-    │  ├─ ❓ Missing: "Bitte ergänzen Sie: [fields]"                       │
-    │  └─ 🔁 Duplicate: "Bereits erfasst (Kd-Nr. XXX)"                     │
+    │  ├─ ❓ Missing: "Bitte ergänzen Sie: [fields]"                        │
+    │  └─ 🔁 Duplicate: "Bereits erfasst (Kd-Nr. XXX)"                      │
     │                                                                        │
-    │  🏷️ Case-Tag Generation: [PEAR-ABC12345]                             │
-    │  └─ Thread continuity for multi-email conversations                  │
+    │  🏷️ Case-Tag Generation: [PEAR-ABC12345]                               │
+    │  └─ Thread continuity for multi-email conversations                    │
     │                                                                        │
-    │  🎯 GERMAN-FRIENDLY RESPONSES                                         │
-    │  └─ "Freundliche Grüße, Ihr PEAR-Team"                               │
+    │  🎯 GERMAN-FRIENDLY RESPONSES                                          │
+    │  └─ "Freundliche Grüße, Ihr PEAR-Team"                                 │
     └────────────────────────────────────────────────────────────────────────┘
 
                                     🎊 RESULT 🎊
